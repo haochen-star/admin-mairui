@@ -13,6 +13,10 @@
           <el-icon><Box /></el-icon>
           <span>产品管理</span>
         </el-menu-item>
+        <el-menu-item index="/user">
+          <el-icon><UserFilled /></el-icon>
+          <span>账户管理</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     
@@ -44,7 +48,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Box, User, ArrowDown } from '@element-plus/icons-vue'
+import { Box, User, ArrowDown, UserFilled } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
