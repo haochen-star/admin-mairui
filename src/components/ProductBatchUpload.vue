@@ -7,7 +7,11 @@
   >
     <div class="upload-container">
       <!-- 文件上传区域 -->
-      <div class="upload-section" v-loading="parsing && parseProgress.total === 0" element-loading-text="正在读取文件，请稍候...">
+      <div
+        class="upload-section"
+        v-loading="parsing && parseProgress.total === 0"
+        element-loading-text="正在读取文件，请稍候..."
+      >
         <el-upload
           ref="uploadRef"
           :auto-upload="false"
@@ -19,56 +23,61 @@
           drag
         >
           <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-          <div class="el-upload__text">
-            将文件拖到此处，或<em>点击上传</em>
-          </div>
+          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
           <template #tip>
-            <div class="el-upload__tip">
-              只能上传 .xlsx 或 .xls 文件
-            </div>
+            <div class="el-upload__tip">只能上传 .xlsx 或 .xls 文件</div>
           </template>
         </el-upload>
       </div>
-      
+
       <!-- 解析进度条（独立区域，显示在遮罩层之上） -->
-      <div v-if="parsing && parseProgress.total > 0" class="parse-progress-wrapper">
+      <div
+        v-if="parsing && parseProgress.total > 0"
+        class="parse-progress-wrapper"
+      >
         <div class="parse-progress">
           <div class="progress-header">
             <el-icon class="is-loading"><Loading /></el-icon>
             <span class="progress-title">正在解析 Excel 文件</span>
           </div>
-          <el-progress 
-            :percentage="parseProgress.percentage" 
+          <el-progress
+            :percentage="parseProgress.percentage"
             :status="parseProgress.percentage === 100 ? 'success' : 'active'"
             :stroke-width="24"
             class="progress-bar"
           >
             <template #default="{ percentage }">
               <span class="progress-text">
-                已处理: {{ parseProgress.processed }} / {{ parseProgress.total }} 行 ({{ percentage }}%)
+                已处理: {{ parseProgress.processed }} /
+                {{ parseProgress.total }} 行 ({{ percentage }}%)
               </span>
             </template>
           </el-progress>
         </div>
       </div>
-      
+
       <!-- 上传进度条 -->
-      <div v-if="uploading && uploadProgress.total > 0" class="parse-progress-wrapper">
+      <div
+        v-if="uploading && uploadProgress.total > 0"
+        class="parse-progress-wrapper"
+      >
         <div class="parse-progress">
           <div class="progress-header">
             <el-icon class="is-loading"><Loading /></el-icon>
             <span class="progress-title">正在上传产品数据</span>
           </div>
-          <el-progress 
-            :percentage="uploadProgress.percentage" 
+          <el-progress
+            :percentage="uploadProgress.percentage"
             :status="uploadProgress.percentage === 100 ? 'success' : 'active'"
             :stroke-width="24"
             class="progress-bar"
           >
             <template #default="{ percentage }">
               <span class="progress-text">
-                批次: {{ uploadProgress.currentBatch }} / {{ uploadProgress.totalBatches }} | 
-                已上传: {{ uploadProgress.uploaded }} / {{ uploadProgress.total }} 条 ({{ percentage }}%)
+                批次: {{ uploadProgress.currentBatch }} /
+                {{ uploadProgress.totalBatches }} | 已上传:
+                {{ uploadProgress.uploaded }} / {{ uploadProgress.total }} 条
+                ({{ percentage }}%)
               </span>
             </template>
           </el-progress>
@@ -76,7 +85,12 @@
       </div>
 
       <!-- 产品类型选择（如果无法自动识别） -->
-      <div v-if="needTypeSelection" class="type-selection" v-loading="parsing" element-loading-text="正在解析 Excel 文件，请稍候...">
+      <div
+        v-if="needTypeSelection"
+        class="type-selection"
+        v-loading="parsing"
+        element-loading-text="正在解析 Excel 文件，请稍候..."
+      >
         <el-alert
           title="无法自动识别产品类型，请手动选择"
           type="warning"
@@ -89,12 +103,27 @@
           style="width: 100%"
           :disabled="parsing"
         >
-          <el-option
-            v-for="type in productTypes"
-            :key="type.value"
-            :label="type.label"
-            :value="type.value"
-          />
+          <template v-for="type in productTypes" :key="type.value">
+            <!-- 所有类型都使用分组显示 -->
+            <el-option-group :label="type.label">
+              <!-- 如果有子类型，显示子类型 -->
+              <template v-if="type.children && type.children.length > 0">
+                <el-option
+                  v-for="child in type.children"
+                  :key="child.value"
+                  :label="child.label"
+                  :value="child.value"
+                />
+              </template>
+              <!-- 如果没有子类型，显示自己本身 -->
+              <el-option
+                v-else
+                :key="type.value"
+                :label="type.label"
+                :value="type.value"
+              />
+            </el-option-group>
+          </template>
         </el-select>
         <el-button
           type="primary"
@@ -108,7 +137,11 @@
       </div>
 
       <!-- 解析结果预览 -->
-      <div v-if="previewData && previewData.products.length > 0" class="preview-section" v-loading="parsing">
+      <div
+        v-if="previewData && previewData.products.length > 0"
+        class="preview-section"
+        v-loading="parsing"
+      >
         <div class="preview-header">
           <div class="preview-stats">
             <el-tag type="info">总行数: {{ previewData.totalRows }}</el-tag>
@@ -116,13 +149,15 @@
             <el-tag v-if="previewData.errorRows > 0" type="danger">
               错误: {{ previewData.errorRows }}
             </el-tag>
-            <el-tag type="primary">产品类型: {{ getTypeLabel(previewData.productType) }}</el-tag>
+            <el-tag type="primary"
+              >产品类型: {{ getTypeLabel(previewData.productType) }}</el-tag
+            >
             <el-tag v-if="previewData.hasMore" type="warning">
               预览: 仅显示前 {{ previewData.previewLimit }} 条
             </el-tag>
           </div>
         </div>
-        
+
         <el-alert
           v-if="previewData.hasMore"
           :title="`共 ${previewData.validRows} 条有效数据，仅预览前 ${previewData.previewLimit} 条。上传时将上传全部 ${previewData.validRows} 条数据。`"
@@ -140,7 +175,7 @@
           :row-class-name="getRowClassName"
         >
           <el-table-column type="index" label="序号" width="60" />
-          
+
           <!-- ELISA Kit / Tyramide TSA Kit 列 -->
           <template v-if="previewData.productType !== 'research_test_reagent'">
             <el-table-column prop="productNo" label="货号" min-width="150" />
@@ -148,10 +183,14 @@
             <el-table-column prop="productSpec" label="规格" min-width="120" />
             <el-table-column prop="price" label="价格" min-width="100" />
           </template>
-          
+
           <!-- Research Test Reagent 列 -->
           <template v-else>
-            <el-table-column prop="productNo" label="产品货号" min-width="150" />
+            <el-table-column
+              prop="productNo"
+              label="产品货号"
+              min-width="150"
+            />
             <el-table-column prop="cnName" label="产品名称" min-width="200" />
             <el-table-column label="基因名称" min-width="150">
               <template #default="{ row }">
@@ -169,7 +208,7 @@
               </template>
             </el-table-column>
           </template>
-          
+
           <el-table-column label="状态" width="120">
             <template #default="{ row }">
               <el-tag v-if="row._hasError" type="danger" size="small">
@@ -202,11 +241,7 @@
 
       <!-- 错误提示 -->
       <div v-if="parseError" class="error-message">
-        <el-alert
-          :title="parseError"
-          type="error"
-          :closable="false"
-        />
+        <el-alert :title="parseError" type="error" :closable="false" />
       </div>
     </div>
 
@@ -219,7 +254,13 @@
           :disabled="!canUpload || parsing"
           @click="handleUpload"
         >
-          {{ uploading ? `上传中... (${uploadProgress.uploaded}/${uploadProgress.total})` : parsing ? '解析中...' : '确认上传' }}
+          {{
+            uploading
+              ? `上传中... (${uploadProgress.uploaded}/${uploadProgress.total})`
+              : parsing
+              ? '解析中...'
+              : '确认上传'
+          }}
         </el-button>
       </span>
     </template>
@@ -229,7 +270,11 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { UploadFilled, Loading } from '@element-plus/icons-vue'
-import { parseExcelFileWithWorker, parseExcelFile, identifyProductType } from '@/utils/excelParser'
+import {
+  parseExcelFileWithWorker,
+  parseExcelFile,
+  identifyProductType
+} from '@/utils/excelParser'
 import { useProductStore } from '@/stores/product'
 
 const props = defineProps({
@@ -255,7 +300,13 @@ const selectedType = ref('')
 const uploading = ref(false)
 const parsing = ref(false)
 const parseProgress = ref({ processed: 0, total: 0, percentage: 0 })
-const uploadProgress = ref({ uploaded: 0, total: 0, percentage: 0, currentBatch: 0, totalBatches: 0 })
+const uploadProgress = ref({
+  uploaded: 0,
+  total: 0,
+  percentage: 0,
+  currentBatch: 0,
+  totalBatches: 0
+})
 
 const visible = computed({
   get: () => props.modelValue,
@@ -263,22 +314,26 @@ const visible = computed({
 })
 
 const canUpload = computed(() => {
-  return previewData.value && 
-         previewData.value.success && 
-         previewData.value.products.length > 0 &&
-         !uploading.value &&
-         !parsing.value
+  return (
+    previewData.value &&
+    previewData.value.success &&
+    previewData.value.products.length > 0 &&
+    !uploading.value &&
+    !parsing.value
+  )
 })
 
 // 获取预览表格数据（包含错误标记和错误行，限制预览数量）
 const previewTableData = computed(() => {
   if (!previewData.value) return []
-  
+
   const result = []
   const previewLimit = previewData.value.previewLimit || 1000
-  
+
   // 添加有效产品（限制预览数量）
-  const productsToShow = previewData.value.previewProducts || previewData.value.products.slice(0, previewLimit)
+  const productsToShow =
+    previewData.value.previewProducts ||
+    previewData.value.products.slice(0, previewLimit)
   productsToShow.forEach((product, index) => {
     result.push({
       ...product,
@@ -286,7 +341,7 @@ const previewTableData = computed(() => {
       _rowNum: index + 2 // Excel 行号（从2开始，因为第1行是表头）
     })
   })
-  
+
   // 添加错误行（限制预览数量）
   const errorsToShow = previewData.value.errors.slice(0, previewLimit)
   errorsToShow.forEach((error) => {
@@ -302,18 +357,30 @@ const previewTableData = computed(() => {
     }
     result.push(errorProduct)
   })
-  
+
   // 按行号排序
   result.sort((a, b) => a._rowNum - b._rowNum)
-  
+
   return result
 })
 
-// 根据类型值获取标签
+// 根据类型值获取标签（支持子类型）
 const getTypeLabel = (typeValue) => {
   if (!typeValue) return '-'
-  const type = props.productTypes.find(t => t.value === typeValue)
-  return type ? type.label : typeValue
+
+  // 先查找主类型
+  const mainType = props.productTypes.find((t) => t.value === typeValue)
+  if (mainType) return mainType.label
+
+  // 如果没找到，查找子类型
+  for (const type of props.productTypes) {
+    if (type.children && Array.isArray(type.children)) {
+      const childType = type.children.find((child) => child.value === typeValue)
+      if (childType) return childType.label
+    }
+  }
+
+  return typeValue
 }
 
 // 获取行的类名（用于高亮错误行）
@@ -330,7 +397,7 @@ const handleFileChange = async (file) => {
   selectedType.value = ''
   parsing.value = true
   parseProgress.value = { processed: 0, total: 0, percentage: 0 }
-  
+
   try {
     // 使用 Web Worker 解析（支持大文件）
     const result = await parseExcelFileWithWorker(
@@ -340,17 +407,17 @@ const handleFileChange = async (file) => {
         parseProgress.value = progress
       }
     )
-    
+
     if (result.needTypeSelection) {
       needTypeSelection.value = true
       return
     }
-    
+
     if (!result.success) {
       parseError.value = result.message || '解析失败'
       return
     }
-    
+
     // 限制预览数量（只显示前1000条）
     const previewLimit = 1000
     if (result.products.length > previewLimit) {
@@ -362,7 +429,7 @@ const handleFileChange = async (file) => {
       result.hasMore = false
       result.previewLimit = result.products.length
     }
-    
+
     previewData.value = result
   } catch (error) {
     parseError.value = error.message || '解析文件时发生错误'
@@ -376,13 +443,13 @@ const handleFileChange = async (file) => {
 // 重新解析（当用户选择了产品类型后）
 const handleReParse = async () => {
   if (!fileList.value.length || !selectedType.value) return
-  
+
   parseError.value = ''
   previewData.value = null
   needTypeSelection.value = false
   parsing.value = true
   parseProgress.value = { processed: 0, total: 0, percentage: 0 }
-  
+
   try {
     // 使用 Web Worker 解析（支持大文件）
     const result = await parseExcelFileWithWorker(
@@ -392,12 +459,12 @@ const handleReParse = async () => {
         parseProgress.value = progress
       }
     )
-    
+
     if (!result.success) {
       parseError.value = result.message || '解析失败'
       return
     }
-    
+
     // 限制预览数量（只显示前1000条）
     const previewLimit = 1000
     if (result.products.length > previewLimit) {
@@ -409,7 +476,7 @@ const handleReParse = async () => {
       result.hasMore = false
       result.previewLimit = result.products.length
     }
-    
+
     previewData.value = result
   } catch (error) {
     parseError.value = error.message || '解析文件时发生错误'
@@ -423,15 +490,15 @@ const handleReParse = async () => {
 // 处理上传（支持分片上传）
 const handleUpload = async () => {
   if (!canUpload.value) return
-  
+
   uploading.value = true
   const validProducts = previewData.value.products
   const totalProducts = validProducts.length
-  
+
   // 每批上传的产品数量（根据实际情况调整，建议 300-500 条）
   const batchSize = 500
   const totalBatches = Math.ceil(totalProducts / batchSize)
-  
+
   uploadProgress.value = {
     uploaded: 0,
     total: totalProducts,
@@ -439,25 +506,27 @@ const handleUpload = async () => {
     currentBatch: 0,
     totalBatches
   }
-  
+
   try {
     let successCount = 0
     let errorCount = 0
     const errors = []
-    
+
     // 分批次上传
     for (let i = 0; i < totalBatches; i++) {
       const start = i * batchSize
       const end = Math.min(start + batchSize, totalProducts)
       const batch = validProducts.slice(start, end)
-      
+
       uploadProgress.value.currentBatch = i + 1
-      
+
       try {
         await productStore.batchCreateProducts(batch)
         successCount += batch.length
         uploadProgress.value.uploaded = successCount
-        uploadProgress.value.percentage = Math.round((successCount / totalProducts) * 100)
+        uploadProgress.value.percentage = Math.round(
+          (successCount / totalProducts) * 100
+        )
       } catch (error) {
         errorCount += batch.length
         errors.push({
@@ -468,15 +537,17 @@ const handleUpload = async () => {
         console.error(`第 ${i + 1} 批上传失败:`, error)
       }
     }
-    
+
     // 显示结果
     if (errorCount === 0) {
       ElMessage.success(`成功上传 ${successCount} 个产品`)
     } else {
-      ElMessage.warning(`上传完成：成功 ${successCount} 个，失败 ${errorCount} 个`)
+      ElMessage.warning(
+        `上传完成：成功 ${successCount} 个，失败 ${errorCount} 个`
+      )
       console.error('上传错误详情:', errors)
     }
-    
+
     emit('success')
     handleClose()
   } catch (error) {
@@ -484,7 +555,13 @@ const handleUpload = async () => {
     console.error('批量上传产品失败:', error)
   } finally {
     uploading.value = false
-    uploadProgress.value = { uploaded: 0, total: 0, percentage: 0, currentBatch: 0, totalBatches: 0 }
+    uploadProgress.value = {
+      uploaded: 0,
+      total: 0,
+      percentage: 0,
+      currentBatch: 0,
+      totalBatches: 0
+    }
   }
 }
 
@@ -499,7 +576,13 @@ const handleClose = () => {
   uploading.value = false
   parsing.value = false
   parseProgress.value = { processed: 0, total: 0, percentage: 0 }
-  uploadProgress.value = { uploaded: 0, total: 0, percentage: 0, currentBatch: 0, totalBatches: 0 }
+  uploadProgress.value = {
+    uploaded: 0,
+    total: 0,
+    percentage: 0,
+    currentBatch: 0,
+    totalBatches: 0
+  }
   if (uploadRef.value) {
     uploadRef.value.clearFiles()
   }
@@ -615,4 +698,3 @@ pre {
   background-color: #fde2e2;
 }
 </style>
-

@@ -17,12 +17,27 @@
           placeholder="请选择产品类型"
           style="width: 100%"
         >
-          <el-option
-            v-for="type in productTypes"
-            :key="type.value"
-            :label="type.label"
-            :value="type.value"
-          />
+          <template v-for="type in productTypes" :key="type.value">
+            <!-- 所有类型都使用分组显示 -->
+            <el-option-group :label="type.label">
+              <!-- 如果有子类型，显示子类型 -->
+              <template v-if="type.children && type.children.length > 0">
+                <el-option
+                  v-for="child in type.children"
+                  :key="child.value"
+                  :label="child.label"
+                  :value="child.value"
+                />
+              </template>
+              <!-- 如果没有子类型，显示自己本身 -->
+              <el-option
+                v-else
+                :key="type.value"
+                :label="type.label"
+                :value="type.value"
+              />
+            </el-option-group>
+          </template>
         </el-select>
       </el-form-item>
       <el-form-item label="货号" prop="productNo">
@@ -429,8 +444,23 @@ const formRules = {
   ]
 }
 
+// 获取第一个可用的类型值（优先选择子类型）
+const getFirstAvailableType = () => {
+  for (const type of props.productTypes) {
+    // 如果有子类型，返回第一个子类型的值
+    if (type.children && type.children.length > 0) {
+      return type.children[0].value
+    }
+    // 如果没有子类型，返回主类型的值
+    if (type.value) {
+      return type.value
+    }
+  }
+  return ''
+}
+
 const resetForm = () => {
-  formData.type = props.productTypes[0]?.value || ''
+  formData.type = getFirstAvailableType()
   formData.productNo = ''
   formData.cnName = ''
   formData.productSpec = ''

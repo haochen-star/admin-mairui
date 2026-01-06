@@ -5,8 +5,8 @@
         <div class="card-header">
           <span>产品管理</span>
           <div class="header-actions">
-            <el-button 
-              type="danger" 
+            <el-button
+              type="danger"
               :disabled="selectedCount === 0"
               @click="handleBatchDelete"
             >
@@ -33,14 +33,29 @@
           clearable
           @change="handleTypeChange"
         >
-          <el-option
-            v-for="type in productTypes"
-            :key="type.value"
-            :label="type.label"
-            :value="type.value"
-          />
+          <template v-for="type in productTypes" :key="type.value">
+            <!-- 所有类型都使用分组显示 -->
+            <el-option-group :label="type.label">
+              <!-- 如果有子类型，显示子类型 -->
+              <template v-if="type.children && type.children.length > 0">
+                <el-option
+                  v-for="child in type.children"
+                  :key="child.value"
+                  :label="child.label"
+                  :value="child.value"
+                />
+              </template>
+              <!-- 如果没有子类型，显示自己本身 -->
+              <el-option
+                v-else
+                :key="type.value"
+                :label="type.label"
+                :value="type.value"
+              />
+            </el-option-group>
+          </template>
         </el-select>
-        
+
         <el-input
           v-model="searchName"
           placeholder="搜索产品名称"
@@ -53,7 +68,7 @@
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        
+
         <el-button type="primary" @click="handleSearch">
           <el-icon><Search /></el-icon>
           搜索
@@ -86,18 +101,10 @@
         </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button
-              type="primary"
-              size="small"
-              @click="handleEdit(row)"
-            >
+            <el-button type="primary" size="small" @click="handleEdit(row)">
               编辑
             </el-button>
-            <el-button
-              type="danger"
-              size="small"
-              @click="handleDelete(row)"
-            >
+            <el-button type="danger" size="small" @click="handleDelete(row)">
               删除
             </el-button>
           </template>
@@ -162,9 +169,13 @@ const pagination = ref({
 })
 
 // 监听 store 的 pagination 变化
-watch(() => productStore.pagination, (newPagination) => {
-  pagination.value = { ...newPagination }
-}, { immediate: true, deep: true })
+watch(
+  () => productStore.pagination,
+  (newPagination) => {
+    pagination.value = { ...newPagination }
+  },
+  { immediate: true, deep: true }
+)
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -173,20 +184,47 @@ const formatDate = (dateString) => {
   return date.toLocaleString('zh-CN')
 }
 
-// 根据类型 value 获取对应的 label
+// 根据类型 value 获取对应的 label（支持子类型）
 const getTypeLabel = (typeValue) => {
   if (!typeValue) return '-'
-  const type = productTypes.value.find(t => t.value === typeValue)
-  return type ? type.label : typeValue
+
+  // 先查找主类型
+  const mainType = productTypes.value.find((t) => t.value === typeValue)
+  if (mainType) return mainType.label
+
+  // 如果没找到，查找子类型
+  for (const type of productTypes.value) {
+    if (type.children && Array.isArray(type.children)) {
+      const childType = type.children.find((child) => child.value === typeValue)
+      if (childType) return childType.label
+    }
+  }
+
+  return typeValue
+}
+
+// 获取第一个可用的类型值（优先选择子类型）
+const getFirstAvailableType = () => {
+  for (const type of productStore.productTypes) {
+    // 如果有子类型，返回第一个子类型的值
+    if (type.children && type.children.length > 0) {
+      return type.children[0].value
+    }
+    // 如果没有子类型，返回主类型的值
+    if (type.value) {
+      return type.value
+    }
+  }
+  return ''
 }
 
 // 获取产品类型列表
 const fetchProductTypes = async () => {
   try {
     await productStore.fetchProductTypes()
-    // 设置默认选中第一个类型
+    // 设置默认选中第一个可用类型（优先选择子类型）
     if (productStore.productTypes.length > 0 && !selectedType.value) {
-      selectedType.value = productStore.productTypes[0].value
+      selectedType.value = getFirstAvailableType()
     }
   } catch (error) {
     ElMessage.error('获取产品类型列表失败')
@@ -298,12 +336,16 @@ const handleBatchDelete = async () => {
     )
 
     loading.value = true
-    const ids = selectedProducts.value.map(product => product.id)
+    const ids = selectedProducts.value.map((product) => product.id)
     const response = await productStore.batchDeleteProducts(ids)
     // 使用接口返回的 message（包含实际删除数量）
     if (response && response.message) {
       ElMessage.success(response.message)
-    } else if (response && response.data && response.data.deletedCount !== undefined) {
+    } else if (
+      response &&
+      response.data &&
+      response.data.deletedCount !== undefined
+    ) {
       ElMessage.success(`成功删除 ${response.data.deletedCount} 个产品`)
     } else {
       ElMessage.success(`成功删除 ${selectedCount.value} 个产品`)
@@ -335,7 +377,9 @@ const handleDelete = async (row) => {
     await productStore.removeProduct(row.id)
     ElMessage.success('删除成功')
     // 如果删除的产品在选中列表中，从选中列表中移除
-    selectedProducts.value = selectedProducts.value.filter(p => p.id !== row.id)
+    selectedProducts.value = selectedProducts.value.filter(
+      (p) => p.id !== row.id
+    )
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '删除失败')
@@ -349,7 +393,7 @@ const handleDelete = async (row) => {
 const handleFormSubmit = async (formData) => {
   try {
     loading.value = true
-    
+
     const submitData = {
       type: formData.type,
       productNo: formData.productNo,
@@ -357,12 +401,12 @@ const handleFormSubmit = async (formData) => {
       productSpec: formData.productSpec,
       price: formData.price
     }
-    
+
     // 如果是科研监测试剂，添加 details 字段
     if (formData.type === 'research_test_reagent' && formData.details) {
       submitData.details = formData.details
     }
-    
+
     if (currentProduct.value) {
       // 编辑
       await productStore.updateProduct(currentProduct.value.id, submitData)
@@ -372,7 +416,7 @@ const handleFormSubmit = async (formData) => {
       await productStore.createProduct(submitData)
       ElMessage.success('创建成功')
     }
-    
+
     formVisible.value = false
     currentProduct.value = null
   } catch (error) {
@@ -416,4 +460,3 @@ onMounted(async () => {
   justify-content: flex-end;
 }
 </style>
-

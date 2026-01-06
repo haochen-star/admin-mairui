@@ -7,21 +7,30 @@ import * as XLSX from 'xlsx'
  */
 export function identifyProductType(fileName) {
   if (!fileName) return null
-  
+
   const lowerFileName = fileName.toLowerCase()
-  
-  if (lowerFileName.includes('elisa试剂盒') || lowerFileName.includes('elisa')) {
+
+  if (
+    lowerFileName.includes('elisa试剂盒') ||
+    lowerFileName.includes('elisa')
+  ) {
     return 'elisa_kit'
   }
-  
-  if (lowerFileName.includes('酪酰胺多色荧光染色试剂盒') || lowerFileName.includes('tyramide')) {
+
+  if (
+    lowerFileName.includes('酪酰胺多色荧光染色试剂盒') ||
+    lowerFileName.includes('tyramide')
+  ) {
     return 'tyramide_tsa_kit'
   }
-  
-  if (lowerFileName.includes('科研检测试剂') || lowerFileName.includes('research')) {
+
+  if (
+    lowerFileName.includes('重组兔单克隆抗体') ||
+    lowerFileName.includes('research')
+  ) {
     return 'research_test_reagent'
   }
-  
+
   return null
 }
 
@@ -33,22 +42,24 @@ export function identifyProductType(fileName) {
 function parseSimpleProductData(rows) {
   const products = []
   const errors = []
-  
+
   rows.forEach((row, index) => {
     const rowNum = index + 2 // Excel 行号（从2开始，因为第1行是表头）
     const errorsForRow = []
-    
+
     // 获取字段值
     const productNo = row['货号'] || row['产品货号'] || ''
     const cnName = row['中文名称'] || row['产品名称'] || ''
     const productSpec = row['规格'] || ''
-    const price = row['价格'] || ''
-    
+    // 处理价格字段，支持多种可能的列名
+    const price =
+      row['价格'] || row['单价'] || row['Price'] || row['price'] || ''
+
     // 验证必填字段
     if (!productNo || productNo.toString().trim() === '') {
       errorsForRow.push('货号不能为空')
     }
-    
+
     if (errorsForRow.length > 0) {
       errors.push({
         row: rowNum,
@@ -64,7 +75,7 @@ function parseSimpleProductData(rows) {
       })
     }
   })
-  
+
   return { products, errors }
 }
 
@@ -76,19 +87,19 @@ function parseSimpleProductData(rows) {
 function parseResearchTestReagentData(rows) {
   const products = []
   const errors = []
-  
+
   rows.forEach((row, index) => {
     const rowNum = index + 2 // Excel 行号
     const errorsForRow = []
-    
+
     // 获取必填字段
     const productNo = row['产品货号'] || ''
-    
+
     // 验证必填字段
     if (!productNo || productNo.toString().trim() === '') {
       errorsForRow.push('产品货号不能为空')
     }
-    
+
     // 构建 details 对象
     const details = {
       productName: (row['产品名称'] || '').toString().trim(),
@@ -123,12 +134,14 @@ function parseResearchTestReagentData(rows) {
       stockStatus: (row['期货'] || '').toString().trim(),
       purification: (row['纯化'] || '').toString().trim(),
       tags: (row['标记'] || '').toString().trim(),
-      img: (row['多图'] || row['img'] || row['图片地址'] || '').toString().trim(),
+      img: (row['多图'] || row['img'] || row['图片地址'] || '')
+        .toString()
+        .trim(),
       imgDesc: (row['多图描述'] || '').toString().trim(),
       background: (row['背景介绍'] || '').toString().trim(),
       tissueExpression: (row['组织表达'] || '').toString().trim()
     }
-    
+
     if (errorsForRow.length > 0) {
       errors.push({
         row: rowNum,
@@ -137,14 +150,19 @@ function parseResearchTestReagentData(rows) {
       })
     } else {
       const productName = details.productName || ''
+      // 处理价格字段，支持多种可能的列名（重组兔单克隆抗体的价格格式：50UL|1300,100UL|2300）
+      const price =
+        row['价格'] || row['单价'] || row['Price'] || row['price'] || ''
+
       products.push({
         productNo: productNo.toString().trim(),
         cnName: productName,
+        price: price.toString().trim(),
         details: details
       })
     }
   })
-  
+
   return { products, errors }
 }
 
@@ -155,24 +173,29 @@ function parseResearchTestReagentData(rows) {
  * @param {Function} onProgress - 进度回调函数 (progress) => void
  * @returns {Promise<Object>} 解析结果
  */
-export async function parseExcelFileWithWorker(file, productType = null, onProgress = null) {
+export async function parseExcelFileWithWorker(
+  file,
+  productType = null,
+  onProgress = null
+) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    
+
     reader.onload = async (e) => {
       try {
         const fileData = new Uint8Array(e.target.result)
-        
+
         // 使用 Vite 的 Worker 语法，自动处理模块导入
         const worker = new Worker(
           new URL('./excelParser.worker.js', import.meta.url),
           { type: 'module' }
         )
-        
+
         // 监听 Worker 消息
         worker.onmessage = (event) => {
-          const { type, result, error, processed, total, percentage } = event.data
-          
+          const { type, result, error, processed, total, percentage } =
+            event.data
+
           if (type === 'progress') {
             // 更新进度
             if (onProgress) {
@@ -186,7 +209,7 @@ export async function parseExcelFileWithWorker(file, productType = null, onProgr
             reject(error)
           }
         }
-        
+
         worker.onerror = (error) => {
           worker.terminate()
           reject({
@@ -195,7 +218,7 @@ export async function parseExcelFileWithWorker(file, productType = null, onProgr
             error
           })
         }
-        
+
         // 发送文件数据到 Worker
         worker.postMessage({
           fileData,
@@ -203,7 +226,6 @@ export async function parseExcelFileWithWorker(file, productType = null, onProgr
           fileName: file.name,
           chunkSize: 1000 // 每批处理1000行
         })
-        
       } catch (error) {
         reject({
           success: false,
@@ -212,14 +234,14 @@ export async function parseExcelFileWithWorker(file, productType = null, onProgr
         })
       }
     }
-    
+
     reader.onerror = () => {
       reject({
         success: false,
         message: '读取文件失败'
       })
     }
-    
+
     reader.readAsArrayBuffer(file)
   })
 }
@@ -233,19 +255,19 @@ export async function parseExcelFileWithWorker(file, productType = null, onProgr
 export async function parseExcelFile(file, productType = null) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    
+
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target.result)
         const workbook = XLSX.read(data, { type: 'array' })
-        
+
         // 获取第一个工作表
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
-        
+
         // 转换为 JSON 数组
         const jsonData = XLSX.utils.sheet_to_json(worksheet)
-        
+
         if (jsonData.length === 0) {
           resolve({
             success: false,
@@ -255,13 +277,13 @@ export async function parseExcelFile(file, productType = null) {
           })
           return
         }
-        
+
         // 识别产品类型
         let identifiedType = productType
         if (!identifiedType) {
           identifiedType = identifyProductType(file.name)
         }
-        
+
         if (!identifiedType) {
           resolve({
             success: false,
@@ -272,7 +294,7 @@ export async function parseExcelFile(file, productType = null) {
           })
           return
         }
-        
+
         // 根据类型解析数据
         let result
         if (identifiedType === 'research_test_reagent') {
@@ -281,13 +303,13 @@ export async function parseExcelFile(file, productType = null) {
           // elisa_kit 或 tyramide_tsa_kit
           result = parseSimpleProductData(jsonData)
         }
-        
+
         // 为每个产品添加类型
-        result.products = result.products.map(product => ({
+        result.products = result.products.map((product) => ({
           ...product,
           type: identifiedType
         }))
-        
+
         resolve({
           success: true,
           productType: identifiedType,
@@ -305,15 +327,14 @@ export async function parseExcelFile(file, productType = null) {
         })
       }
     }
-    
+
     reader.onerror = () => {
       reject({
         success: false,
         message: '读取文件失败'
       })
     }
-    
+
     reader.readAsArrayBuffer(file)
   })
 }
-
