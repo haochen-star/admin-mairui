@@ -10,10 +10,135 @@ export function identifyProductType(fileName) {
 
   const lowerFileName = fileName.toLowerCase()
 
+  // 先检查是否是 ELISA 试剂盒
   if (
     lowerFileName.includes('elisa试剂盒') ||
     lowerFileName.includes('elisa')
   ) {
+    // 进一步识别 ELISA 试剂盒的具体子类型
+    // 注意：匹配顺序很重要，先匹配更具体的，再匹配通用的
+    
+    // 农残 ELISA 试剂盒（需要先匹配，因为包含"残"字）
+    if (
+      lowerFileName.includes('农残') ||
+      lowerFileName.includes('pesticide') ||
+      lowerFileName.includes('竞争法')
+    ) {
+      return 'elisa_kit_pesticide_residue'
+    }
+    
+    // 山羊/绵羊 ELISA 试剂盒（需要先匹配，因为包含"羊"字）
+    if (
+      lowerFileName.includes('山羊') ||
+      lowerFileName.includes('绵羊') ||
+      lowerFileName.includes('goat') ||
+      lowerFileName.includes('sheep')
+    ) {
+      return 'elisa_kit_goat_sheep'
+    }
+    
+    // 其它 ELISA 试剂盒（马/豚鼠/鸭）
+    if (
+      lowerFileName.includes('马') ||
+      lowerFileName.includes('豚鼠') ||
+      lowerFileName.includes('鸭') ||
+      lowerFileName.includes('horse') ||
+      lowerFileName.includes('guinea') ||
+      lowerFileName.includes('duck')
+    ) {
+      return 'elisa_kit_other'
+    }
+    
+    // 大鼠 ELISA 试剂盒
+    if (
+      lowerFileName.includes('大鼠') ||
+      lowerFileName.includes('rat')
+    ) {
+      return 'elisa_kit_rat'
+    }
+    
+    // 小鼠 ELISA 试剂盒
+    if (
+      lowerFileName.includes('小鼠') ||
+      lowerFileName.includes('mouse')
+    ) {
+      return 'elisa_kit_mouse'
+    }
+    
+    // 猪 ELISA 试剂盒
+    if (
+      lowerFileName.includes('猪') ||
+      lowerFileName.includes('pig')
+    ) {
+      return 'elisa_kit_pig'
+    }
+    
+    // 猫 ELISA 试剂盒
+    if (
+      lowerFileName.includes('猫') ||
+      lowerFileName.includes('cat')
+    ) {
+      return 'elisa_kit_cat'
+    }
+    
+    // 牛 ELISA 试剂盒
+    if (
+      lowerFileName.includes('牛') ||
+      lowerFileName.includes('cattle') ||
+      lowerFileName.includes('cow')
+    ) {
+      return 'elisa_kit_cattle'
+    }
+    
+    // 鸡 ELISA 试剂盒
+    if (
+      lowerFileName.includes('鸡') ||
+      lowerFileName.includes('chicken')
+    ) {
+      return 'elisa_kit_chicken'
+    }
+    
+    // 兔 ELISA 试剂盒
+    if (
+      lowerFileName.includes('兔') ||
+      lowerFileName.includes('rabbit')
+    ) {
+      return 'elisa_kit_rabbit'
+    }
+    
+    // 鱼 ELISA 试剂盒
+    if (
+      lowerFileName.includes('鱼') ||
+      lowerFileName.includes('fish')
+    ) {
+      return 'elisa_kit_fish'
+    }
+    
+    // 犬 ELISA 试剂盒
+    if (
+      lowerFileName.includes('犬') ||
+      lowerFileName.includes('dog')
+    ) {
+      return 'elisa_kit_dog'
+    }
+    
+    // 昆虫 ELISA 试剂盒
+    if (
+      lowerFileName.includes('昆虫') ||
+      lowerFileName.includes('insect')
+    ) {
+      return 'elisa_kit_insect'
+    }
+    
+    // 人 ELISA 试剂盒
+    if (
+      lowerFileName.includes('人') ||
+      lowerFileName.includes('human')
+    ) {
+      return 'elisa_kit_human'
+    }
+    
+    // 如果无法识别具体子类型，返回父类型
     return 'elisa_kit'
   }
 
