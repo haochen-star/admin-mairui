@@ -1,7 +1,61 @@
 import * as XLSX from 'xlsx'
 
+/**
+ * 收集所有叶子节点和子分类（用于匹配）
+ * @param {Array} types - 产品类型列表（树形结构）
+ * @returns {Array} 所有叶子节点和子分类的数组
+ */
+function collectLeafTypes(types) {
+  const result = []
+  
+  for (const type of types) {
+    // 如果有子类，跳过父类，只收集子类
+    if (type.children && type.children.length > 0) {
+      // 递归收集子类
+      result.push(...collectLeafTypes(type.children))
+    } else {
+      // 没有子类，这是一个叶子节点，添加到结果中
+      result.push(type)
+    }
+  }
+  
+  return result
+}
+
+/**
+ * 根据文件名识别产品类型 ID
+ * @param {string} fileName - 文件名
+ * @param {Array} productTypes - 产品类型列表（树形结构）
+ * @returns {number|null} 产品类型 ID，如果无法识别返回 null
+ */
+function identifyProductTypeByFileName(fileName, productTypes = []) {
+  if (!fileName || !productTypes || productTypes.length === 0) {
+    return null
+  }
+
+  const lowerFileName = fileName.toLowerCase()
+  
+  // 收集所有叶子节点和子分类
+  const leafTypes = collectLeafTypes(productTypes)
+  
+  // 按标签长度降序排序，优先匹配更具体的分类名称
+  leafTypes.sort((a, b) => b.label.length - a.label.length)
+  
+  // 遍历所有叶子节点和子分类，检查文件名是否包含分类名称
+  for (const type of leafTypes) {
+    const lowerLabel = type.label.toLowerCase()
+    
+    // 如果文件名包含分类名称，返回该分类的 ID
+    if (lowerFileName.includes(lowerLabel)) {
+      return type.id
+    }
+  }
+  
+  return null
+}
+
 self.onmessage = function (e) {
-  const { fileData, productType, fileName, chunkSize = 1000 } = e.data
+  const { fileData, productTypeId, fileName, productTypes = [], chunkSize = 1000 } = e.data
 
   try {
     // 解析 Excel
@@ -25,143 +79,13 @@ self.onmessage = function (e) {
       return
     }
 
-    // 识别产品类型
-    let identifiedType = productType
-    if (!identifiedType) {
-      const lowerFileName = fileName.toLowerCase()
-      
-      // 先检查是否是 ELISA 试剂盒
-      if (
-        lowerFileName.includes('elisa试剂盒') ||
-        lowerFileName.includes('elisa')
-      ) {
-        // 进一步识别 ELISA 试剂盒的具体子类型
-        // 注意：匹配顺序很重要，先匹配更具体的，再匹配通用的
-        
-        // 农残 ELISA 试剂盒（需要先匹配，因为包含"残"字）
-        if (
-          lowerFileName.includes('农残') ||
-          lowerFileName.includes('pesticide') ||
-          lowerFileName.includes('竞争法')
-        ) {
-          identifiedType = 'elisa_kit_pesticide_residue'
-        }
-        // 山羊/绵羊 ELISA 试剂盒（需要先匹配，因为包含"羊"字）
-        else if (
-          lowerFileName.includes('山羊') ||
-          lowerFileName.includes('绵羊') ||
-          lowerFileName.includes('goat') ||
-          lowerFileName.includes('sheep')
-        ) {
-          identifiedType = 'elisa_kit_goat_sheep'
-        }
-        // 其它 ELISA 试剂盒（马/豚鼠/鸭）
-        else if (
-          lowerFileName.includes('马') ||
-          lowerFileName.includes('豚鼠') ||
-          lowerFileName.includes('鸭') ||
-          lowerFileName.includes('horse') ||
-          lowerFileName.includes('guinea') ||
-          lowerFileName.includes('duck')
-        ) {
-          identifiedType = 'elisa_kit_other'
-        }
-        // 大鼠 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('大鼠') ||
-          lowerFileName.includes('rat')
-        ) {
-          identifiedType = 'elisa_kit_rat'
-        }
-        // 小鼠 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('小鼠') ||
-          lowerFileName.includes('mouse')
-        ) {
-          identifiedType = 'elisa_kit_mouse'
-        }
-        // 猪 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('猪') ||
-          lowerFileName.includes('pig')
-        ) {
-          identifiedType = 'elisa_kit_pig'
-        }
-        // 猫 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('猫') ||
-          lowerFileName.includes('cat')
-        ) {
-          identifiedType = 'elisa_kit_cat'
-        }
-        // 牛 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('牛') ||
-          lowerFileName.includes('cattle') ||
-          lowerFileName.includes('cow')
-        ) {
-          identifiedType = 'elisa_kit_cattle'
-        }
-        // 鸡 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('鸡') ||
-          lowerFileName.includes('chicken')
-        ) {
-          identifiedType = 'elisa_kit_chicken'
-        }
-        // 兔 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('兔') ||
-          lowerFileName.includes('rabbit')
-        ) {
-          identifiedType = 'elisa_kit_rabbit'
-        }
-        // 鱼 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('鱼') ||
-          lowerFileName.includes('fish')
-        ) {
-          identifiedType = 'elisa_kit_fish'
-        }
-        // 犬 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('犬') ||
-          lowerFileName.includes('dog')
-        ) {
-          identifiedType = 'elisa_kit_dog'
-        }
-        // 昆虫 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('昆虫') ||
-          lowerFileName.includes('insect')
-        ) {
-          identifiedType = 'elisa_kit_insect'
-        }
-        // 人 ELISA 试剂盒
-        else if (
-          lowerFileName.includes('人') ||
-          lowerFileName.includes('human')
-        ) {
-          identifiedType = 'elisa_kit_human'
-        }
-        // 如果无法识别具体子类型，返回父类型
-        else {
-          identifiedType = 'elisa_kit'
-        }
-      } else if (
-        lowerFileName.includes('酪酰胺多色荧光染色试剂盒') ||
-        lowerFileName.includes('tyramide')
-      ) {
-        identifiedType = 'tyramide_tsa_kit'
-      } else if (
-        lowerFileName.includes('重组兔单克隆抗体') ||
-        lowerFileName.includes('research')
-      ) {
-        identifiedType = 'research_test_reagent'
-      }
+    // 识别产品类型 ID
+    let identifiedTypeId = productTypeId
+    if (!identifiedTypeId) {
+      identifiedTypeId = identifyProductTypeByFileName(fileName, productTypes)
     }
 
-    if (!identifiedType) {
+    if (!identifiedTypeId) {
       self.postMessage({
         type: 'complete',
         result: {
@@ -180,9 +104,22 @@ self.onmessage = function (e) {
     const errors = []
     let processedRows = 0
 
+    // 查找类型信息，判断是否需要 details
+    const findTypeInTree = (types, targetId) => {
+      for (const type of types) {
+        if (type.id === targetId) return type
+        if (type.children && type.children.length > 0) {
+          const found = findTypeInTree(type.children, targetId)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    const productType = findTypeInTree(productTypes, identifiedTypeId)
+
     for (let i = 0; i < jsonData.length; i += chunkSize) {
       const chunk = jsonData.slice(i, i + chunkSize)
-      const chunkResult = processChunk(chunk, identifiedType, i + 2)
+      const chunkResult = processChunk(chunk, identifiedTypeId, productType?.hasDetails || false, i + 2)
 
       products.push(...chunkResult.products)
       errors.push(...chunkResult.errors)
@@ -202,7 +139,7 @@ self.onmessage = function (e) {
       type: 'complete',
       result: {
         success: true,
-        productType: identifiedType,
+        productType: identifiedTypeId,
         products,
         errors,
         totalRows: jsonData.length,
@@ -222,7 +159,7 @@ self.onmessage = function (e) {
   }
 }
 
-function processChunk(chunk, productType, startRowNum) {
+function processChunk(chunk, productTypeId, hasDetails, startRowNum) {
   const products = []
   const errors = []
 
@@ -230,7 +167,7 @@ function processChunk(chunk, productType, startRowNum) {
     const rowNum = startRowNum + index
     const errorsForRow = []
 
-    if (productType === 'research_test_reagent') {
+    if (hasDetails) {
       const productNo = row['产品货号'] || ''
       if (!productNo || productNo.toString().trim() === '') {
         errorsForRow.push('产品货号不能为空')
@@ -300,7 +237,7 @@ function processChunk(chunk, productType, startRowNum) {
           productNo: productNo.toString().trim(),
           cnName: details.productName,
           price: price.toString().trim(),
-          type: productType,
+          type: productTypeId,
           details
         })
       }
@@ -321,7 +258,7 @@ function processChunk(chunk, productType, startRowNum) {
           cnName: (row['中文名称'] || row['产品名称'] || '').toString().trim(),
           productSpec: (row['规格'] || '').toString().trim(),
           price: price.toString().trim(),
-          type: productType
+          type: productTypeId
         })
       }
     }

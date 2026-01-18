@@ -17,24 +17,24 @@
           placeholder="请选择产品类型"
           style="width: 100%"
         >
-          <template v-for="type in productTypes" :key="type.value">
+          <template v-for="type in productTypes" :key="type.id">
             <!-- 所有类型都使用分组显示 -->
             <el-option-group :label="type.label">
               <!-- 如果有子类型，显示子类型 -->
               <template v-if="type.children && type.children.length > 0">
                 <el-option
                   v-for="child in type.children"
-                  :key="child.value"
+                  :key="child.id"
                   :label="child.label"
-                  :value="child.value"
+                  :value="child.id"
                 />
               </template>
               <!-- 如果没有子类型，显示自己本身 -->
               <el-option
                 v-else
-                :key="type.value"
+                :key="type.id"
                 :label="type.label"
-                :value="type.value"
+                :value="type.id"
               />
             </el-option-group>
           </template>
@@ -420,7 +420,25 @@ const formData = reactive({
   details: initDetails()
 })
 
-const isResearchTestReagent = computed(() => formData.type === 'research_test_reagent')
+// 根据类型 ID 判断是否需要 details 字段
+const isResearchTestReagent = computed(() => {
+  if (!formData.type) return false
+  
+  // 在 productTypes 中查找当前类型
+  const findTypeInTree = (types, targetId) => {
+    for (const type of types) {
+      if (type.id === targetId) return type
+      if (type.children && type.children.length > 0) {
+        const found = findTypeInTree(type.children, targetId)
+        if (found) return found
+      }
+    }
+    return null
+  }
+  
+  const type = findTypeInTree(props.productTypes, formData.type)
+  return type ? type.hasDetails : false
+})
 
 // 同步 cnName 和 details.productName
 watch(() => formData.cnName, (newVal) => {
@@ -444,19 +462,19 @@ const formRules = {
   ]
 }
 
-// 获取第一个可用的类型值（优先选择子类型）
+// 获取第一个可用的类型 ID（优先选择子类型）
 const getFirstAvailableType = () => {
   for (const type of props.productTypes) {
-    // 如果有子类型，返回第一个子类型的值
+    // 如果有子类型，返回第一个子类型的 ID
     if (type.children && type.children.length > 0) {
-      return type.children[0].value
+      return type.children[0].id
     }
-    // 如果没有子类型，返回主类型的值
-    if (type.value) {
-      return type.value
+    // 如果没有子类型，返回主类型的 ID
+    if (type.id) {
+      return type.id
     }
   }
-  return ''
+  return null
 }
 
 const resetForm = () => {
@@ -478,8 +496,20 @@ watch(() => props.product, (newProduct) => {
     formData.productSpec = newProduct.productSpec || ''
     formData.price = newProduct.price || ''
     
-    // 如果是科研监测试剂且有 details 字段，填充详细信息
-    if (newProduct.type === 'research_test_reagent' && newProduct.details) {
+    // 根据类型判断是否需要 details 字段
+    const findTypeInTree = (types, targetId) => {
+      for (const type of types) {
+        if (type.id === targetId) return type
+        if (type.children && type.children.length > 0) {
+          const found = findTypeInTree(type.children, targetId)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    const productType = findTypeInTree(props.productTypes, newProduct.type)
+    
+    if (productType && productType.hasDetails && newProduct.details) {
       formData.details = { ...initDetails(), ...newProduct.details }
     } else {
       formData.details = initDetails()
@@ -500,8 +530,20 @@ watch(visible, (val) => {
     formData.productSpec = props.product.productSpec || ''
     formData.price = props.product.price || ''
     
-    // 如果是科研监测试剂且有 details 字段，填充详细信息
-    if (props.product.type === 'research_test_reagent' && props.product.details) {
+    // 根据类型判断是否需要 details 字段
+    const findTypeInTree = (types, targetId) => {
+      for (const type of types) {
+        if (type.id === targetId) return type
+        if (type.children && type.children.length > 0) {
+          const found = findTypeInTree(type.children, targetId)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    const productType = findTypeInTree(props.productTypes, props.product.type)
+    
+    if (productType && productType.hasDetails && props.product.details) {
       formData.details = { ...initDetails(), ...props.product.details }
     } else {
       formData.details = initDetails()
@@ -524,11 +566,23 @@ const handleSubmit = async () => {
       try {
         const submitData = { ...formData }
         
-        // 如果是科研监测试剂，确保包含 details 字段
-        if (formData.type === 'research_test_reagent') {
+        // 根据类型判断是否需要 details 字段
+        const findTypeInTree = (types, targetId) => {
+          for (const type of types) {
+            if (type.id === targetId) return type
+            if (type.children && type.children.length > 0) {
+              const found = findTypeInTree(type.children, targetId)
+              if (found) return found
+            }
+          }
+          return null
+        }
+        const productType = findTypeInTree(props.productTypes, formData.type)
+        
+        if (productType && productType.hasDetails) {
           submitData.details = { ...formData.details }
         } else {
-          // 非科研监测试剂，不提交 details
+          // 不需要 details 的类型，不提交 details
           delete submitData.details
         }
         

@@ -13,11 +13,11 @@ request.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore()
     const token = authStore.token
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    
+
     return config
   },
   (error) => {
@@ -29,18 +29,18 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response) => {
     const { data } = response
-    
+
     // 如果后端返回的格式是 { success, message, data }
     if (data.success === false) {
       ElMessage.error(data.message || '请求失败')
       return Promise.reject(new Error(data.message || '请求失败'))
     }
-    
+
     return data
   },
   (error) => {
     const { response } = error
-    
+
     if (response) {
       switch (response.status) {
         case 401:
@@ -64,10 +64,9 @@ request.interceptors.response.use(
     } else {
       ElMessage.error('网络错误，请检查网络连接')
     }
-    
+
     return Promise.reject(error)
   }
 )
 
 export default request
-

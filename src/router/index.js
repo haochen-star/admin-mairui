@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -25,6 +26,12 @@ const routes = [
         name: 'User',
         component: () => import('@/views/User/UserList.vue'),
         meta: { title: '账户管理', requiresAuth: true }
+      },
+      {
+        path: '/product-type',
+        name: 'ProductType',
+        component: () => import('@/views/ProductType/ProductTypeList.vue'),
+        meta: { title: '产品类型管理', requiresAuth: true, roles: ['super_admin', 'admin'] }
       }
     ]
   }
@@ -50,6 +57,15 @@ router.beforeEach((to, from, next) => {
   } else {
     // 需要登录的页面
     if (isLoggedIn) {
+      // 检查角色权限
+      if (to.meta.roles && Array.isArray(to.meta.roles)) {
+        const userRole = authStore.user?.role
+        if (!userRole || !to.meta.roles.includes(userRole)) {
+          ElMessage.error('权限不足，无法访问该页面')
+          next('/')
+          return
+        }
+      }
       next()
     } else {
       next('/login')

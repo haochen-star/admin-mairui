@@ -33,24 +33,24 @@
           clearable
           @change="handleTypeChange"
         >
-          <template v-for="type in productTypes" :key="type.value">
+          <template v-for="type in productTypes" :key="type.id">
             <!-- 所有类型都使用分组显示 -->
             <el-option-group :label="type.label">
               <!-- 如果有子类型，显示子类型 -->
               <template v-if="type.children && type.children.length > 0">
                 <el-option
                   v-for="child in type.children"
-                  :key="child.value"
+                  :key="child.id"
                   :label="child.label"
-                  :value="child.value"
+                  :value="child.id"
                 />
               </template>
               <!-- 如果没有子类型，显示自己本身 -->
               <el-option
                 v-else
-                :key="type.value"
+                :key="type.id"
                 :label="type.label"
-                :value="type.value"
+                :value="type.id"
               />
             </el-option-group>
           </template>
@@ -184,38 +184,38 @@ const formatDate = (dateString) => {
   return date.toLocaleString('zh-CN')
 }
 
-// 根据类型 value 获取对应的 label（支持子类型）
-const getTypeLabel = (typeValue) => {
-  if (!typeValue) return '-'
+// 根据类型 ID 获取对应的 label（支持子类型）
+const getTypeLabel = (typeId) => {
+  if (!typeId) return '-'
 
   // 先查找主类型
-  const mainType = productTypes.value.find((t) => t.value === typeValue)
+  const mainType = productTypes.value.find((t) => t.id === typeId)
   if (mainType) return mainType.label
 
   // 如果没找到，查找子类型
   for (const type of productTypes.value) {
     if (type.children && Array.isArray(type.children)) {
-      const childType = type.children.find((child) => child.value === typeValue)
+      const childType = type.children.find((child) => child.id === typeId)
       if (childType) return childType.label
     }
   }
 
-  return typeValue
+  return typeId
 }
 
-// 获取第一个可用的类型值（优先选择子类型）
+// 获取第一个可用的类型 ID（优先选择子类型）
 const getFirstAvailableType = () => {
   for (const type of productStore.productTypes) {
-    // 如果有子类型，返回第一个子类型的值
+    // 如果有子类型，返回第一个子类型的 ID
     if (type.children && type.children.length > 0) {
-      return type.children[0].value
+      return type.children[0].id
     }
-    // 如果没有子类型，返回主类型的值
-    if (type.value) {
-      return type.value
+    // 如果没有子类型，返回主类型的 ID
+    if (type.id) {
+      return type.id
     }
   }
-  return ''
+  return null
 }
 
 // 获取产品类型列表
@@ -297,8 +297,21 @@ const handleBatchUploadSuccess = () => {
 
 // 编辑产品
 const handleEdit = async (row) => {
-  // 如果是科研监测试剂，需要获取完整信息（包含 details）
-  if (row.type === 'research_test_reagent') {
+  // 查找类型信息，判断是否需要 details
+  const findTypeInTree = (types, targetId) => {
+    for (const type of types) {
+      if (type.id === targetId) return type
+      if (type.children && type.children.length > 0) {
+        const found = findTypeInTree(type.children, targetId)
+        if (found) return found
+      }
+    }
+    return null
+  }
+  const productType = findTypeInTree(productTypes.value, row.type)
+  
+  // 如果需要 details 字段，获取完整信息
+  if (productType && productType.hasDetails) {
     try {
       const product = await productStore.fetchProductById(row.id)
       currentProduct.value = product || { ...row }
@@ -402,8 +415,21 @@ const handleFormSubmit = async (formData) => {
       price: formData.price
     }
 
-    // 如果是科研监测试剂，添加 details 字段
-    if (formData.type === 'research_test_reagent' && formData.details) {
+    // 查找类型信息，判断是否需要 details
+    const findTypeInTree = (types, targetId) => {
+      for (const type of types) {
+        if (type.id === targetId) return type
+        if (type.children && type.children.length > 0) {
+          const found = findTypeInTree(type.children, targetId)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    const productType = findTypeInTree(productTypes.value, formData.type)
+    
+    // 如果需要 details 字段，添加 details
+    if (productType && productType.hasDetails && formData.details) {
       submitData.details = formData.details
     }
 

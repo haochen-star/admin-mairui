@@ -1,162 +1,14 @@
 import * as XLSX from 'xlsx'
+import { identifyProductTypeByFileName } from './typeIdentifier'
 
 /**
- * 根据文件名识别产品类型
+ * 根据文件名识别产品类型 ID
  * @param {string} fileName - 文件名
- * @returns {string|null} 产品类型值，如果无法识别返回 null
+ * @param {Array} productTypes - 产品类型列表（树形结构），可选
+ * @returns {number|null} 产品类型 ID，如果无法识别返回 null
  */
-export function identifyProductType(fileName) {
-  if (!fileName) return null
-
-  const lowerFileName = fileName.toLowerCase()
-
-  // 先检查是否是 ELISA 试剂盒
-  if (
-    lowerFileName.includes('elisa试剂盒') ||
-    lowerFileName.includes('elisa')
-  ) {
-    // 进一步识别 ELISA 试剂盒的具体子类型
-    // 注意：匹配顺序很重要，先匹配更具体的，再匹配通用的
-    
-    // 农残 ELISA 试剂盒（需要先匹配，因为包含"残"字）
-    if (
-      lowerFileName.includes('农残') ||
-      lowerFileName.includes('pesticide') ||
-      lowerFileName.includes('竞争法')
-    ) {
-      return 'elisa_kit_pesticide_residue'
-    }
-    
-    // 山羊/绵羊 ELISA 试剂盒（需要先匹配，因为包含"羊"字）
-    if (
-      lowerFileName.includes('山羊') ||
-      lowerFileName.includes('绵羊') ||
-      lowerFileName.includes('goat') ||
-      lowerFileName.includes('sheep')
-    ) {
-      return 'elisa_kit_goat_sheep'
-    }
-    
-    // 其它 ELISA 试剂盒（马/豚鼠/鸭）
-    if (
-      lowerFileName.includes('马') ||
-      lowerFileName.includes('豚鼠') ||
-      lowerFileName.includes('鸭') ||
-      lowerFileName.includes('horse') ||
-      lowerFileName.includes('guinea') ||
-      lowerFileName.includes('duck')
-    ) {
-      return 'elisa_kit_other'
-    }
-    
-    // 大鼠 ELISA 试剂盒
-    if (
-      lowerFileName.includes('大鼠') ||
-      lowerFileName.includes('rat')
-    ) {
-      return 'elisa_kit_rat'
-    }
-    
-    // 小鼠 ELISA 试剂盒
-    if (
-      lowerFileName.includes('小鼠') ||
-      lowerFileName.includes('mouse')
-    ) {
-      return 'elisa_kit_mouse'
-    }
-    
-    // 猪 ELISA 试剂盒
-    if (
-      lowerFileName.includes('猪') ||
-      lowerFileName.includes('pig')
-    ) {
-      return 'elisa_kit_pig'
-    }
-    
-    // 猫 ELISA 试剂盒
-    if (
-      lowerFileName.includes('猫') ||
-      lowerFileName.includes('cat')
-    ) {
-      return 'elisa_kit_cat'
-    }
-    
-    // 牛 ELISA 试剂盒
-    if (
-      lowerFileName.includes('牛') ||
-      lowerFileName.includes('cattle') ||
-      lowerFileName.includes('cow')
-    ) {
-      return 'elisa_kit_cattle'
-    }
-    
-    // 鸡 ELISA 试剂盒
-    if (
-      lowerFileName.includes('鸡') ||
-      lowerFileName.includes('chicken')
-    ) {
-      return 'elisa_kit_chicken'
-    }
-    
-    // 兔 ELISA 试剂盒
-    if (
-      lowerFileName.includes('兔') ||
-      lowerFileName.includes('rabbit')
-    ) {
-      return 'elisa_kit_rabbit'
-    }
-    
-    // 鱼 ELISA 试剂盒
-    if (
-      lowerFileName.includes('鱼') ||
-      lowerFileName.includes('fish')
-    ) {
-      return 'elisa_kit_fish'
-    }
-    
-    // 犬 ELISA 试剂盒
-    if (
-      lowerFileName.includes('犬') ||
-      lowerFileName.includes('dog')
-    ) {
-      return 'elisa_kit_dog'
-    }
-    
-    // 昆虫 ELISA 试剂盒
-    if (
-      lowerFileName.includes('昆虫') ||
-      lowerFileName.includes('insect')
-    ) {
-      return 'elisa_kit_insect'
-    }
-    
-    // 人 ELISA 试剂盒
-    if (
-      lowerFileName.includes('人') ||
-      lowerFileName.includes('human')
-    ) {
-      return 'elisa_kit_human'
-    }
-    
-    // 如果无法识别具体子类型，返回父类型
-    return 'elisa_kit'
-  }
-
-  if (
-    lowerFileName.includes('酪酰胺多色荧光染色试剂盒') ||
-    lowerFileName.includes('tyramide')
-  ) {
-    return 'tyramide_tsa_kit'
-  }
-
-  if (
-    lowerFileName.includes('重组兔单克隆抗体') ||
-    lowerFileName.includes('research')
-  ) {
-    return 'research_test_reagent'
-  }
-
-  return null
+export function identifyProductType(fileName, productTypes = []) {
+  return identifyProductTypeByFileName(fileName, productTypes)
 }
 
 /**
@@ -294,14 +146,16 @@ function parseResearchTestReagentData(rows) {
 /**
  * 使用 Web Worker 解析 Excel 文件（支持大文件，不阻塞主线程）
  * @param {File} file - Excel 文件对象
- * @param {string} productType - 产品类型（可选）
+ * @param {number} productTypeId - 产品类型 ID（可选）
  * @param {Function} onProgress - 进度回调函数 (progress) => void
+ * @param {Array} productTypes - 产品类型列表（树形结构），用于自动识别
  * @returns {Promise<Object>} 解析结果
  */
 export async function parseExcelFileWithWorker(
   file,
-  productType = null,
-  onProgress = null
+  productTypeId = null,
+  onProgress = null,
+  productTypes = []
 ) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -344,11 +198,26 @@ export async function parseExcelFileWithWorker(
           })
         }
 
+        // 将 Vue 响应式对象转换为普通对象（可序列化）
+        const serializeProductTypes = (types) => {
+          return types.map((type) => ({
+            id: type.id,
+            label: type.label,
+            parentId: type.parentId,
+            hasDetails: type.hasDetails,
+            children:
+              type.children && type.children.length > 0
+                ? serializeProductTypes(type.children)
+                : []
+          }))
+        }
+
         // 发送文件数据到 Worker
         worker.postMessage({
           fileData,
-          productType,
+          productTypeId,
           fileName: file.name,
+          productTypes: serializeProductTypes(productTypes), // 传递序列化后的类型列表
           chunkSize: 1000 // 每批处理1000行
         })
       } catch (error) {
@@ -374,10 +243,15 @@ export async function parseExcelFileWithWorker(
 /**
  * 解析 Excel 文件（小文件时使用，同步解析）
  * @param {File} file - Excel 文件对象
- * @param {string} productType - 产品类型（可选，如果不提供则根据文件名识别）
+ * @param {number} productTypeId - 产品类型 ID（可选，如果不提供则根据文件名识别）
+ * @param {Array} productTypes - 产品类型列表（树形结构），用于自动识别
  * @returns {Promise<Object>} 解析结果
  */
-export async function parseExcelFile(file, productType = null) {
+export async function parseExcelFile(
+  file,
+  productTypeId = null,
+  productTypes = []
+) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
 
@@ -404,12 +278,12 @@ export async function parseExcelFile(file, productType = null) {
         }
 
         // 识别产品类型
-        let identifiedType = productType
-        if (!identifiedType) {
-          identifiedType = identifyProductType(file.name)
+        let identifiedTypeId = productTypeId
+        if (!identifiedTypeId) {
+          identifiedTypeId = identifyProductType(file.name, productTypes)
         }
 
-        if (!identifiedType) {
+        if (!identifiedTypeId) {
           resolve({
             success: false,
             message: '无法识别产品类型，请手动选择',
@@ -420,24 +294,37 @@ export async function parseExcelFile(file, productType = null) {
           return
         }
 
+        // 查找类型信息，判断是否需要 details
+        const findTypeInTree = (types, targetId) => {
+          for (const type of types) {
+            if (type.id === targetId) return type
+            if (type.children && type.children.length > 0) {
+              const found = findTypeInTree(type.children, targetId)
+              if (found) return found
+            }
+          }
+          return null
+        }
+        const productType = findTypeInTree(productTypes, identifiedTypeId)
+
         // 根据类型解析数据
         let result
-        if (identifiedType === 'research_test_reagent') {
+        if (productType && productType.hasDetails) {
           result = parseResearchTestReagentData(jsonData)
         } else {
-          // elisa_kit 或 tyramide_tsa_kit
+          // 其他类型使用简单解析
           result = parseSimpleProductData(jsonData)
         }
 
-        // 为每个产品添加类型
+        // 为每个产品添加类型 ID
         result.products = result.products.map((product) => ({
           ...product,
-          type: identifiedType
+          type: identifiedTypeId
         }))
 
         resolve({
           success: true,
-          productType: identifiedType,
+          productType: identifiedTypeId,
           products: result.products,
           errors: result.errors,
           totalRows: jsonData.length,

@@ -17,6 +17,13 @@
           <el-icon><UserFilled /></el-icon>
           <span>账户管理</span>
         </el-menu-item>
+        <el-menu-item
+          v-if="isAdminOrSuperAdmin"
+          index="/product-type"
+        >
+          <el-icon><Setting /></el-icon>
+          <span>产品类型管理</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     
@@ -48,7 +55,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Box, User, ArrowDown, UserFilled } from '@element-plus/icons-vue'
+import { Box, User, ArrowDown, UserFilled, Setting } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
@@ -56,6 +63,12 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const activeMenu = computed(() => route.path)
+
+// 检查是否是管理员或超级管理员
+const isAdminOrSuperAdmin = computed(() => {
+  const role = authStore.user?.role
+  return role === 'admin' || role === 'super_admin'
+})
 
 const handleCommand = async (command) => {
   if (command === 'logout') {

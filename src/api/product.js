@@ -5,7 +5,7 @@ import request from '@/utils/request'
  */
 export const getProductTypes = () => {
   return request({
-    url: '/api/product/types',
+    url: '/api/product-type',
     method: 'get'
   })
 }

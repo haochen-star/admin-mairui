@@ -103,24 +103,24 @@
           style="width: 100%"
           :disabled="parsing"
         >
-          <template v-for="type in productTypes" :key="type.value">
+          <template v-for="type in productTypes" :key="type.id">
             <!-- 所有类型都使用分组显示 -->
             <el-option-group :label="type.label">
               <!-- 如果有子类型，显示子类型 -->
               <template v-if="type.children && type.children.length > 0">
                 <el-option
                   v-for="child in type.children"
-                  :key="child.value"
+                  :key="child.id"
                   :label="child.label"
-                  :value="child.value"
+                  :value="child.id"
                 />
               </template>
               <!-- 如果没有子类型，显示自己本身 -->
               <el-option
                 v-else
-                :key="type.value"
+                :key="type.id"
                 :label="type.label"
-                :value="type.value"
+                :value="type.id"
               />
             </el-option-group>
           </template>
@@ -176,16 +176,8 @@
         >
           <el-table-column type="index" label="序号" width="60" />
 
-          <!-- ELISA Kit / Tyramide TSA Kit 列 -->
-          <template v-if="previewData.productType !== 'research_test_reagent'">
-            <el-table-column prop="productNo" label="货号" min-width="150" />
-            <el-table-column prop="cnName" label="产品名称" min-width="200" />
-            <el-table-column prop="productSpec" label="规格" min-width="120" />
-            <el-table-column prop="price" label="价格" min-width="100" />
-          </template>
-
-          <!-- Research Test Reagent 列 -->
-          <template v-else>
+          <!-- 需要 details 字段的类型列 -->
+          <template v-if="isResearchTestReagentType">
             <el-table-column
               prop="productNo"
               label="产品货号"
@@ -207,6 +199,14 @@
                 {{ row.details?.reactiveSpecies || '-' }}
               </template>
             </el-table-column>
+          </template>
+
+          <!-- 其他类型列 -->
+          <template v-else>
+            <el-table-column prop="productNo" label="货号" min-width="150" />
+            <el-table-column prop="cnName" label="产品名称" min-width="200" />
+            <el-table-column prop="productSpec" label="规格" min-width="120" />
+            <el-table-column prop="price" label="价格" min-width="100" />
           </template>
 
           <el-table-column label="状态" width="120">
@@ -364,24 +364,45 @@ const previewTableData = computed(() => {
   return result
 })
 
-// 根据类型值获取标签（支持子类型）
-const getTypeLabel = (typeValue) => {
-  if (!typeValue) return '-'
+// 根据类型 ID 获取标签（支持子类型）
+const getTypeLabel = (typeId) => {
+  if (!typeId) return '-'
 
-  // 先查找主类型
-  const mainType = props.productTypes.find((t) => t.value === typeValue)
-  if (mainType) return mainType.label
-
-  // 如果没找到，查找子类型
-  for (const type of props.productTypes) {
-    if (type.children && Array.isArray(type.children)) {
-      const childType = type.children.find((child) => child.value === typeValue)
-      if (childType) return childType.label
+  // 递归查找类型
+  const findTypeInTree = (types, targetId) => {
+    for (const type of types) {
+      if (type.id === targetId) return type
+      if (type.children && type.children.length > 0) {
+        const found = findTypeInTree(type.children, targetId)
+        if (found) return found
+      }
     }
+    return null
   }
 
-  return typeValue
+  const type = findTypeInTree(props.productTypes, typeId)
+  return type ? type.label : typeId
 }
+
+// 判断当前预览的产品类型是否需要 details 字段
+const isResearchTestReagentType = computed(() => {
+  if (!previewData.value || !previewData.value.productType) return false
+
+  // 递归查找类型
+  const findTypeInTree = (types, targetId) => {
+    for (const type of types) {
+      if (type.id === targetId) return type
+      if (type.children && type.children.length > 0) {
+        const found = findTypeInTree(type.children, targetId)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const type = findTypeInTree(props.productTypes, previewData.value.productType)
+  return type ? type.hasDetails : false
+})
 
 // 获取行的类名（用于高亮错误行）
 const getRowClassName = ({ row }) => {
@@ -405,7 +426,8 @@ const handleFileChange = async (file) => {
       null,
       (progress) => {
         parseProgress.value = progress
-      }
+      },
+      props.productTypes
     )
 
     if (result.needTypeSelection) {
@@ -454,10 +476,11 @@ const handleReParse = async () => {
     // 使用 Web Worker 解析（支持大文件）
     const result = await parseExcelFileWithWorker(
       fileList.value[0].raw,
-      selectedType.value,
+      selectedType.value ? parseInt(selectedType.value, 10) : null,
       (progress) => {
         parseProgress.value = progress
-      }
+      },
+      props.productTypes
     )
 
     if (!result.success) {
