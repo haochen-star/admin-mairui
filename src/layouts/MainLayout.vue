@@ -1,24 +1,62 @@
 <template>
   <el-container class="layout-container">
-    <el-aside width="200px" class="sidebar">
+    <el-aside :width="isCollapse ? '64px' : '200px'" class="sidebar">
       <div class="logo">
-        <h2>后台管理</h2>
+        <h2 v-if="!isCollapse">后台管理</h2>
+        <h2 v-else>后台</h2>
       </div>
       <el-menu
         :default-active="activeMenu"
+        :collapse="isCollapse"
+        :collapse-transition="false"
         router
         class="sidebar-menu"
       >
-        <el-menu-item index="/product">
+        <el-tooltip
+          v-if="isCollapse"
+          content="产品管理"
+          placement="right"
+          effect="dark"
+        >
+          <el-menu-item index="/product">
+            <el-icon><Box /></el-icon>
+            <span>产品管理</span>
+          </el-menu-item>
+        </el-tooltip>
+        <el-menu-item v-else index="/product">
           <el-icon><Box /></el-icon>
           <span>产品管理</span>
         </el-menu-item>
-        <el-menu-item index="/user">
+        
+        <el-tooltip
+          v-if="isCollapse"
+          content="账户管理"
+          placement="right"
+          effect="dark"
+        >
+          <el-menu-item index="/user">
+            <el-icon><UserFilled /></el-icon>
+            <span>账户管理</span>
+          </el-menu-item>
+        </el-tooltip>
+        <el-menu-item v-else index="/user">
           <el-icon><UserFilled /></el-icon>
           <span>账户管理</span>
         </el-menu-item>
+        
+        <el-tooltip
+          v-if="isCollapse && isAdminOrSuperAdmin"
+          content="产品类型管理"
+          placement="right"
+          effect="dark"
+        >
+          <el-menu-item index="/product-type">
+            <el-icon><Setting /></el-icon>
+            <span>产品类型管理</span>
+          </el-menu-item>
+        </el-tooltip>
         <el-menu-item
-          v-if="isAdminOrSuperAdmin"
+          v-else-if="isAdminOrSuperAdmin"
           index="/product-type"
         >
           <el-icon><Setting /></el-icon>
@@ -29,6 +67,14 @@
     
     <el-container>
       <el-header class="header">
+        <div class="header-left">
+          <el-button
+            :icon="isCollapse ? Expand : Fold"
+            circle
+            @click="toggleCollapse"
+            class="collapse-btn"
+          />
+        </div>
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <span class="user-info">
@@ -53,14 +99,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Box, User, ArrowDown, UserFilled, Setting } from '@element-plus/icons-vue'
+import { Box, User, ArrowDown, UserFilled, Setting, Fold, Expand } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+
+// 菜单折叠状态
+const isCollapse = ref(false)
+
+// 切换折叠状态
+const toggleCollapse = () => {
+  isCollapse.value = !isCollapse.value
+}
 
 const activeMenu = computed(() => route.path)
 
@@ -117,6 +171,10 @@ const handleCommand = async (command) => {
   background-color: #304156;
 }
 
+.sidebar-menu:not(.el-menu--collapse) {
+  width: 200px;
+}
+
 .sidebar-menu :deep(.el-menu-item) {
   color: rgba(255, 255, 255, 0.7);
 }
@@ -130,13 +188,43 @@ const handleCommand = async (command) => {
   color: white;
 }
 
+.sidebar-menu :deep(.el-menu-item span) {
+  margin-left: 8px;
+}
+
+/* 确保 tooltip 在折叠状态下正确显示 */
+.sidebar-menu :deep(.el-tooltip__trigger) {
+  width: 100%;
+  display: block;
+}
+
+.sidebar-menu :deep(.el-tooltip) {
+  width: 100%;
+}
+
 .header {
   background-color: white;
   border-bottom: 1px solid #e4e7ed;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.collapse-btn {
+  border: none;
+  background-color: transparent;
+  color: #606266;
+}
+
+.collapse-btn:hover {
+  color: #409eff;
+  background-color: #f5f7fa;
 }
 
 .header-right {
