@@ -10,6 +10,7 @@
       :model="formData"
       :rules="formRules"
       label-width="100px"
+      class="product-form"
     >
       <el-form-item label="产品类型" prop="type">
         <el-select
@@ -41,16 +42,10 @@
         </el-select>
       </el-form-item>
       <el-form-item label="货号" prop="productNo">
-        <el-input
-          v-model="formData.productNo"
-          placeholder="请输入货号"
-        />
+        <el-input v-model="formData.productNo" placeholder="请输入货号" />
       </el-form-item>
       <el-form-item label="产品名称" prop="cnName">
-        <el-input
-          v-model="formData.cnName"
-          placeholder="请输入产品名称"
-        />
+        <el-input v-model="formData.cnName" placeholder="请输入产品名称" />
       </el-form-item>
       <el-form-item label="产品图片" prop="productImage">
         <el-input
@@ -59,10 +54,7 @@
         />
       </el-form-item>
       <el-form-item label="价格" prop="price">
-        <el-input
-          v-model="formData.price"
-          placeholder="请输入价格"
-        />
+        <el-input v-model="formData.price" placeholder="请输入价格" />
       </el-form-item>
       <el-form-item label="背景介绍" prop="background">
         <el-input
@@ -82,16 +74,22 @@
       <!-- 科研监测试剂详细信息 -->
       <template v-if="isResearchTestReagent">
         <el-divider content-position="left">详细信息</el-divider>
-        
+
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="别名">
-              <el-input v-model="formData.details.alias" placeholder="请输入别名" />
+              <el-input
+                v-model="formData.details.alias"
+                placeholder="请输入别名"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="基因名称">
-              <el-input v-model="formData.details.geneName" placeholder="请输入基因名称" />
+              <el-input
+                v-model="formData.details.geneName"
+                placeholder="请输入基因名称"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -99,12 +97,18 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="蛋白名称">
-              <el-input v-model="formData.details.proteinName" placeholder="请输入蛋白名称" />
+              <el-input
+                v-model="formData.details.proteinName"
+                placeholder="请输入蛋白名称"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="应用">
-              <el-input v-model="formData.details.application" placeholder="请输入应用" />
+              <el-input
+                v-model="formData.details.application"
+                placeholder="请输入应用"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -112,12 +116,135 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="反应种属">
-              <el-input v-model="formData.details.reactiveSpecies" placeholder="请输入反应种属" />
+              <el-input
+                v-model="formData.details.reactiveSpecies"
+                placeholder="请输入反应种属"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="克隆性">
+              <el-input
+                v-model="formData.details.clonality"
+                placeholder="请输入克隆性"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="稀释度">
+              <el-input
+                v-model="formData.details.dilution"
+                placeholder="请输入稀释度"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="参考分子量">
+              <el-input
+                v-model="formData.details.referenceMolecularWeight"
+                placeholder="请输入参考分子量"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="预测分子量">
+              <el-input
+                v-model="formData.details.predictedMolecularWeight"
+                placeholder="请输入预测分子量"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item>
+              <template #label>
+                <span
+                  style="
+                    font-size: 12px;
+                    line-height: 32px;
+                    display: inline-block;
+                    vertical-align: middle;
+                  "
+                  >运输及保存条件</span
+                >
+              </template>
+              <el-input
+                v-model="formData.details.storageCondition"
+                placeholder="请输入运输及保存条件"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="宿主">
+              <el-input
+                v-model="formData.details.host"
+                placeholder="请输入宿主"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="同种型">
+              <el-input
+                v-model="formData.details.isotype"
+                placeholder="请输入同种型"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="细胞定位">
+              <el-input
+                v-model="formData.details.cellLocalization"
+                placeholder="请输入细胞定位"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="信号通路">
+              <el-input
+                v-model="formData.details.signalingPathway"
+                placeholder="请输入信号通路"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="功能">
+              <el-input
+                v-model="formData.details.function"
+                placeholder="请输入功能"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="纯化">
+              <el-input
+                v-model="formData.details.purification"
+                placeholder="请输入纯化"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="24">
             <el-form-item label="存储缓冲液">
-              <el-input v-model="formData.details.storageBuffer" placeholder="请输入存储缓冲液" />
+              <el-input
+                v-model="formData.details.storageBuffer"
+                placeholder="请输入存储缓冲液"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -126,22 +253,35 @@
         <el-row :gutter="20">
           <el-col :span="6">
             <el-form-item label="Gene ID">
-              <el-input v-model.number="formData.details.humanGeneId" type="number" placeholder="Gene ID" />
+              <el-input
+                v-model.number="formData.details.humanGeneId"
+                type="number"
+                placeholder="Gene ID"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Gene Link">
-              <el-input v-model="formData.details.humanGeneLink" placeholder="Gene Link" />
+              <el-input
+                v-model="formData.details.humanGeneLink"
+                placeholder="Gene Link"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Swissprot No">
-              <el-input v-model="formData.details.humanSwissprotNo" placeholder="Swissprot No" />
+              <el-input
+                v-model="formData.details.humanSwissprotNo"
+                placeholder="Swissprot No"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Swissprot Link">
-              <el-input v-model="formData.details.humanSwissprotLink" placeholder="Swissprot Link" />
+              <el-input
+                v-model="formData.details.humanSwissprotLink"
+                placeholder="Swissprot Link"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -150,22 +290,35 @@
         <el-row :gutter="20">
           <el-col :span="6">
             <el-form-item label="Gene ID">
-              <el-input v-model.number="formData.details.mouseGeneId" type="number" placeholder="Gene ID" />
+              <el-input
+                v-model.number="formData.details.mouseGeneId"
+                type="number"
+                placeholder="Gene ID"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Gene Link">
-              <el-input v-model="formData.details.mouseGeneLink" placeholder="Gene Link" />
+              <el-input
+                v-model="formData.details.mouseGeneLink"
+                placeholder="Gene Link"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Swissprot No.">
-              <el-input v-model="formData.details.mouseSwissprotNo" placeholder="Swissprot No." />
+              <el-input
+                v-model="formData.details.mouseSwissprotNo"
+                placeholder="Swissprot No."
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Swissprot Link">
-              <el-input v-model="formData.details.mouseSwissprotLink" placeholder="Swissprot Link" />
+              <el-input
+                v-model="formData.details.mouseSwissprotLink"
+                placeholder="Swissprot Link"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -174,22 +327,35 @@
         <el-row :gutter="20">
           <el-col :span="6">
             <el-form-item label="Gene ID">
-              <el-input v-model.number="formData.details.ratGeneId" type="number" placeholder="Gene ID" />
+              <el-input
+                v-model.number="formData.details.ratGeneId"
+                type="number"
+                placeholder="Gene ID"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Gene Link">
-              <el-input v-model="formData.details.ratGeneLink" placeholder="Gene Link" />
+              <el-input
+                v-model="formData.details.ratGeneLink"
+                placeholder="Gene Link"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Swissprot No.">
-              <el-input v-model="formData.details.ratSwissprotNo" placeholder="Swissprot No." />
+              <el-input
+                v-model="formData.details.ratSwissprotNo"
+                placeholder="Swissprot No."
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="Swissprot Link">
-              <el-input v-model="formData.details.ratSwissprotLink" placeholder="Swissprot Link" />
+              <el-input
+                v-model="formData.details.ratSwissprotLink"
+                placeholder="Swissprot Link"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -207,94 +373,16 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="参考分子量">
-              <el-input v-model="formData.details.referenceMolecularWeight" placeholder="请输入参考分子量" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="预测分子量">
-              <el-input v-model="formData.details.predictedMolecularWeight" placeholder="请输入预测分子量" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="运输及保存条件">
-              <el-input v-model="formData.details.storageCondition" placeholder="请输入运输及保存条件" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="宿主">
-              <el-input v-model="formData.details.host" placeholder="请输入宿主" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="同种型">
-              <el-input v-model="formData.details.isotype" placeholder="请输入同种型" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="细胞定位">
-          <el-input
-            v-model="formData.details.cellLocalization"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入细胞定位"
-          />
-        </el-form-item>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="信号通路">
-              <el-input
-                v-model="formData.details.signalingPathway"
-                type="textarea"
-                :rows="2"
-                placeholder="请输入信号通路"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="功能">
-              <el-input
-                v-model="formData.details.function"
-                type="textarea"
-                :rows="2"
-                placeholder="请输入功能"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
             <el-form-item label="货期">
-              <el-input v-model="formData.details.stockStatus" placeholder="请输入货期" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="纯化">
               <el-input
-                v-model="formData.details.purification"
-                type="textarea"
-                :rows="2"
-                placeholder="请输入纯化"
+                v-model="formData.details.stockStatus"
+                placeholder="请输入货期"
               />
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="克隆性">
-              <el-input v-model="formData.details.clonality" placeholder="请输入克隆性" />
-            </el-form-item>
-          </el-col>
           <el-col :span="12">
             <el-form-item label="说明书">
               <el-input
@@ -308,12 +396,20 @@
         </el-row>
 
         <el-row :gutter="20">
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item label="多图">
-              <el-input v-model="formData.details.img" placeholder="请输入多图（支持多图，用逗号分隔）" />
+              <el-input
+                v-model="formData.details.img"
+                type="textarea"
+                :rows="2"
+                placeholder="请输入多图（支持多图，用逗号分隔）"
+              />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="24">
             <el-form-item label="多图描述">
               <el-input
                 v-model="formData.details.imgDesc"
@@ -326,7 +422,7 @@
         </el-row>
       </template>
     </el-form>
-    
+
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="handleClose">取消</el-button>
@@ -340,6 +436,7 @@
 
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   modelValue: {
@@ -376,6 +473,7 @@ const initDetails = () => ({
   application: '',
   reactiveSpecies: '',
   storageBuffer: '',
+  dilution: '',
   humanGeneId: null,
   humanGeneLink: '',
   humanSwissprotNo: '',
@@ -416,35 +514,52 @@ const formData = reactive({
   details: initDetails()
 })
 
+// 查找类型在树中的位置
+const findTypeInTree = (types, targetId) => {
+  for (const type of types) {
+    if (type.id === targetId) return type
+    if (type.children && type.children.length > 0) {
+      const found = findTypeInTree(type.children, targetId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
 // 根据类型 ID 判断是否需要 details 字段
 const isResearchTestReagent = computed(() => {
   if (!formData.type) return false
-  
-  // 在 productTypes 中查找当前类型
-  const findTypeInTree = (types, targetId) => {
-    for (const type of types) {
-      if (type.id === targetId) return type
-      if (type.children && type.children.length > 0) {
-        const found = findTypeInTree(type.children, targetId)
-        if (found) return found
-      }
-    }
-    return null
-  }
-  
+
   const type = findTypeInTree(props.productTypes, formData.type)
   return type ? type.hasDetails : false
 })
 
+// 监听类型变化，确保复杂产品的 details 被正确初始化
+watch(
+  () => formData.type,
+  (newType, oldType) => {
+    if (newType) {
+      const type = findTypeInTree(props.productTypes, newType)
+      // 如果切换到复杂类型，确保 details 被初始化
+      if (type && type.hasDetails) {
+        // 如果是从简单类型切换到复杂类型，或者 details 未正确初始化，则重新初始化
+        if (
+          !oldType ||
+          !formData.details ||
+          typeof formData.details !== 'object'
+        ) {
+          formData.details = initDetails()
+        }
+      }
+    }
+  }
+)
+
 // 产品名称现在只在顶层，不需要同步
 
 const formRules = {
-  type: [
-    { required: true, message: '请选择产品类型', trigger: 'change' }
-  ],
-  productNo: [
-    { required: true, message: '请输入货号', trigger: 'blur' }
-  ]
+  type: [{ required: true, message: '请选择产品类型', trigger: 'change' }],
+  productNo: [{ required: true, message: '请输入货号', trigger: 'blur' }]
 }
 
 // 获取第一个可用的类型 ID（优先选择子类型）
@@ -475,38 +590,42 @@ const resetForm = () => {
 }
 
 // 监听 product 变化，填充表单
-watch(() => props.product, (newProduct) => {
-  if (newProduct) {
-    formData.type = newProduct.type || ''
-    formData.productNo = newProduct.productNo || ''
-    formData.cnName = newProduct.cnName || ''
-    formData.productImage = newProduct.productImage || ''
-    formData.price = newProduct.price || ''
-    formData.background = newProduct.background || ''
-    formData.categoryFlag = newProduct.categoryFlag || ''
-    
-    // 根据类型判断是否需要 details 字段
-    const findTypeInTree = (types, targetId) => {
-      for (const type of types) {
-        if (type.id === targetId) return type
-        if (type.children && type.children.length > 0) {
-          const found = findTypeInTree(type.children, targetId)
-          if (found) return found
+watch(
+  () => props.product,
+  (newProduct) => {
+    if (newProduct) {
+      formData.type = newProduct.type || ''
+      formData.productNo = newProduct.productNo || ''
+      formData.cnName = newProduct.cnName || ''
+      formData.productImage = newProduct.productImage || ''
+      formData.price = newProduct.price || ''
+      formData.background = newProduct.background || ''
+      formData.categoryFlag = newProduct.categoryFlag || ''
+
+      // 根据类型判断是否需要 details 字段
+      const findTypeInTree = (types, targetId) => {
+        for (const type of types) {
+          if (type.id === targetId) return type
+          if (type.children && type.children.length > 0) {
+            const found = findTypeInTree(type.children, targetId)
+            if (found) return found
+          }
         }
+        return null
       }
-      return null
-    }
-    const productType = findTypeInTree(props.productTypes, newProduct.type)
-    
-    if (productType && productType.hasDetails && newProduct.details) {
-      formData.details = { ...initDetails(), ...newProduct.details }
+      const productType = findTypeInTree(props.productTypes, newProduct.type)
+
+      if (productType && productType.hasDetails && newProduct.details) {
+        formData.details = { ...initDetails(), ...newProduct.details }
+      } else {
+        formData.details = initDetails()
+      }
     } else {
-      formData.details = initDetails()
+      resetForm()
     }
-  } else {
-    resetForm()
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 // 监听 visible 变化，重置表单
 watch(visible, (val) => {
@@ -520,7 +639,7 @@ watch(visible, (val) => {
     formData.price = props.product.price || ''
     formData.background = props.product.background || ''
     formData.categoryFlag = props.product.categoryFlag || ''
-    
+
     // 根据类型判断是否需要 details 字段
     const findTypeInTree = (types, targetId) => {
       for (const type of types) {
@@ -533,7 +652,7 @@ watch(visible, (val) => {
       return null
     }
     const productType = findTypeInTree(props.productTypes, props.product.type)
-    
+
     if (productType && productType.hasDetails && props.product.details) {
       formData.details = { ...initDetails(), ...props.product.details }
     } else {
@@ -553,10 +672,10 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       loading.value = true
-      
+
       try {
         const submitData = { ...formData }
-        
+
         // 根据类型判断是否需要 details 字段
         const findTypeInTree = (types, targetId) => {
           for (const type of types) {
@@ -569,14 +688,14 @@ const handleSubmit = async () => {
           return null
         }
         const productType = findTypeInTree(props.productTypes, formData.type)
-        
+
         if (productType && productType.hasDetails) {
           submitData.details = { ...formData.details }
         } else {
           // 不需要 details 的类型，不提交 details
           delete submitData.details
         }
-        
+
         emit('submit', submitData)
       } catch (error) {
         ElMessage.error(error.message || '操作失败')
@@ -595,4 +714,3 @@ const handleSubmit = async () => {
   gap: 10px;
 }
 </style>
-
