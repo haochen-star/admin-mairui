@@ -202,6 +202,7 @@ function processChunk(chunk, productTypeId, hasDetails, startRowNum) {
           application: (row['应用'] || '').toString().trim(),
           reactiveSpecies: (row['反应种属'] || '').toString().trim(),
           storageBuffer: (row['存储缓冲液'] || '').toString().trim(),
+          dilution: (row['稀释度'] || '').toString().trim(),
           humanGeneId: row['Human Gene ID']
             ? Number(row['Human Gene ID'])
             : null,
