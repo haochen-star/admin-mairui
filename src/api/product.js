@@ -47,8 +47,11 @@ export const getProductById = (id) => {
  * @param {string} data.type - 产品类型（可选）
  * @param {string} data.productNo - 货号（必填）
  * @param {string} data.cnName - 产品名称
- * @param {string} data.productSpec - 产品规格
+ * @param {string} data.productImage - 产品图片
  * @param {string} data.price - 价格
+ * @param {string} data.background - 背景介绍
+ * @param {string} data.categoryFlag - 产品类别标志
+ * @param {Object} data.details - 详细信息（复杂类型需要）
  */
 export const createProduct = (data) => {
   return request({
@@ -108,4 +111,3 @@ export const batchDeleteProducts = (ids) => {
     data: { ids }
   })
 }
-

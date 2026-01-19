@@ -52,16 +52,30 @@
           placeholder="请输入产品名称"
         />
       </el-form-item>
-      <el-form-item v-if="!isResearchTestReagent" label="产品规格" prop="productSpec">
+      <el-form-item label="产品图片" prop="productImage">
         <el-input
-          v-model="formData.productSpec"
-          placeholder="请输入产品规格"
+          v-model="formData.productImage"
+          placeholder="请输入产品图片"
         />
       </el-form-item>
-      <el-form-item v-if="!isResearchTestReagent" label="价格" prop="price">
+      <el-form-item label="价格" prop="price">
         <el-input
           v-model="formData.price"
           placeholder="请输入价格"
+        />
+      </el-form-item>
+      <el-form-item label="背景介绍" prop="background">
+        <el-input
+          v-model="formData.background"
+          type="textarea"
+          :rows="3"
+          placeholder="请输入背景介绍"
+        />
+      </el-form-item>
+      <el-form-item label="产品类别标志" prop="categoryFlag">
+        <el-input
+          v-model="formData.categoryFlag"
+          placeholder="请输入产品类别标志"
         />
       </el-form-item>
 
@@ -71,21 +85,8 @@
         
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="产品名称">
-              <el-input v-model="formData.details.productName" placeholder="请输入产品名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="二级分类">
-              <el-input v-model="formData.details.category" placeholder="请输入二级分类" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="分类路径">
-              <el-input v-model="formData.details.categoryPath" placeholder="请输入分类路径" />
+            <el-form-item label="别名">
+              <el-input v-model="formData.details.alias" placeholder="请输入别名" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -102,8 +103,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="推荐应用">
-              <el-input v-model="formData.details.recommendedApplication" placeholder="请输入推荐应用" />
+            <el-form-item label="应用">
+              <el-input v-model="formData.details.application" placeholder="请输入应用" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -115,20 +116,11 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="浓度">
-              <el-input v-model="formData.details.concentration" placeholder="请输入浓度" />
+            <el-form-item label="存储缓冲液">
+              <el-input v-model="formData.details.storageBuffer" placeholder="请输入存储缓冲液" />
             </el-form-item>
           </el-col>
         </el-row>
-
-        <el-form-item label="存储缓冲液">
-          <el-input
-            v-model="formData.details.storageBuffer"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入存储缓冲液"
-          />
-        </el-form-item>
 
         <el-divider content-position="left">Human 基因信息</el-divider>
         <el-row :gutter="20">
@@ -143,8 +135,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="6">
-            <el-form-item label="Swissprot No.">
-              <el-input v-model="formData.details.humanSwissprotNo" placeholder="Swissprot No." />
+            <el-form-item label="Swissprot No">
+              <el-input v-model="formData.details.humanSwissprotNo" placeholder="Swissprot No" />
             </el-form-item>
           </el-col>
           <el-col :span="6">
@@ -205,31 +197,13 @@
         <el-divider content-position="left">其他信息</el-divider>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="免疫原">
+            <el-form-item label="参考文献">
               <el-input
-                v-model="formData.details.immunogen"
+                v-model="formData.details.reference"
                 type="textarea"
                 :rows="2"
-                placeholder="请输入免疫原"
+                placeholder="请输入参考文献"
               />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="特异性">
-              <el-input
-                v-model="formData.details.specificity"
-                type="textarea"
-                :rows="2"
-                placeholder="请输入特异性"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="稀释度">
-              <el-input v-model="formData.details.dilution" placeholder="请输入稀释度" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -241,13 +215,26 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
+            <el-form-item label="预测分子量">
+              <el-input v-model="formData.details.predictedMolecularWeight" placeholder="请输入预测分子量" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="运输及保存条件">
               <el-input v-model="formData.details.storageCondition" placeholder="请输入运输及保存条件" />
             </el-form-item>
           </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="宿主">
               <el-input v-model="formData.details.host" placeholder="请输入宿主" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="同种型">
+              <el-input v-model="formData.details.isotype" placeholder="请输入同种型" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -261,19 +248,33 @@
           />
         </el-form-item>
 
-        <el-form-item label="功能">
-          <el-input
-            v-model="formData.details.function"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入功能"
-          />
-        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="信号通路">
+              <el-input
+                v-model="formData.details.signalingPathway"
+                type="textarea"
+                :rows="2"
+                placeholder="请输入信号通路"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="功能">
+              <el-input
+                v-model="formData.details.function"
+                type="textarea"
+                :rows="2"
+                placeholder="请输入功能"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="期货">
-              <el-input v-model="formData.details.stockStatus" placeholder="请输入期货状态" />
+            <el-form-item label="货期">
+              <el-input v-model="formData.details.stockStatus" placeholder="请输入货期" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -290,43 +291,39 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="标记">
-              <el-input v-model="formData.details.tags" placeholder="请输入标记" />
+            <el-form-item label="克隆性">
+              <el-input v-model="formData.details.clonality" placeholder="请输入克隆性" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="图片地址">
-              <el-input v-model="formData.details.img" placeholder="请输入图片地址（支持多图，用逗号分隔）" />
+            <el-form-item label="说明书">
+              <el-input
+                v-model="formData.details.manual"
+                type="textarea"
+                :rows="2"
+                placeholder="请输入说明书"
+              />
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="多图描述">
-          <el-input
-            v-model="formData.details.imgDesc"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入多图描述"
-          />
-        </el-form-item>
-
-        <el-form-item label="背景介绍">
-          <el-input
-            v-model="formData.details.background"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入背景介绍"
-          />
-        </el-form-item>
-
-        <el-form-item label="组织表达">
-          <el-input
-            v-model="formData.details.tissueExpression"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入组织表达"
-          />
-        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="多图">
+              <el-input v-model="formData.details.img" placeholder="请输入多图（支持多图，用逗号分隔）" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="多图描述">
+              <el-input
+                v-model="formData.details.imgDesc"
+                type="textarea"
+                :rows="2"
+                placeholder="请输入多图描述"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </template>
     </el-form>
     
@@ -371,16 +368,13 @@ const visible = computed({
 
 const isEdit = computed(() => !!props.product)
 
-// 初始化详细信息字段
+// 初始化详细信息字段（33个字段）
 const initDetails = () => ({
-  productName: '',
-  category: '',
-  categoryPath: '',
+  alias: '',
   geneName: '',
   proteinName: '',
-  recommendedApplication: '',
+  application: '',
   reactiveSpecies: '',
-  concentration: '',
   storageBuffer: '',
   humanGeneId: null,
   humanGeneLink: '',
@@ -394,29 +388,31 @@ const initDetails = () => ({
   ratGeneLink: '',
   ratSwissprotNo: '',
   ratSwissprotLink: '',
-  immunogen: '',
-  specificity: '',
-  dilution: '',
+  reference: '',
   referenceMolecularWeight: '',
+  predictedMolecularWeight: '',
   storageCondition: '',
   host: '',
+  isotype: '',
   cellLocalization: '',
+  signalingPathway: '',
   function: '',
   stockStatus: '',
   purification: '',
-  tags: '',
+  clonality: '',
+  manual: '',
   img: '',
-  imgDesc: '',
-  background: '',
-  tissueExpression: ''
+  imgDesc: ''
 })
 
 const formData = reactive({
   type: '',
   productNo: '',
   cnName: '',
-  productSpec: '',
+  productImage: '',
   price: '',
+  background: '',
+  categoryFlag: '',
   details: initDetails()
 })
 
@@ -440,18 +436,7 @@ const isResearchTestReagent = computed(() => {
   return type ? type.hasDetails : false
 })
 
-// 同步 cnName 和 details.productName
-watch(() => formData.cnName, (newVal) => {
-  if (isResearchTestReagent.value) {
-    formData.details.productName = newVal
-  }
-})
-
-watch(() => formData.details.productName, (newVal) => {
-  if (isResearchTestReagent.value) {
-    formData.cnName = newVal
-  }
-})
+// 产品名称现在只在顶层，不需要同步
 
 const formRules = {
   type: [
@@ -481,8 +466,10 @@ const resetForm = () => {
   formData.type = getFirstAvailableType()
   formData.productNo = ''
   formData.cnName = ''
-  formData.productSpec = ''
+  formData.productImage = ''
   formData.price = ''
+  formData.background = ''
+  formData.categoryFlag = ''
   formData.details = initDetails()
   formRef.value?.clearValidate()
 }
@@ -493,8 +480,10 @@ watch(() => props.product, (newProduct) => {
     formData.type = newProduct.type || ''
     formData.productNo = newProduct.productNo || ''
     formData.cnName = newProduct.cnName || ''
-    formData.productSpec = newProduct.productSpec || ''
+    formData.productImage = newProduct.productImage || ''
     formData.price = newProduct.price || ''
+    formData.background = newProduct.background || ''
+    formData.categoryFlag = newProduct.categoryFlag || ''
     
     // 根据类型判断是否需要 details 字段
     const findTypeInTree = (types, targetId) => {
@@ -527,8 +516,10 @@ watch(visible, (val) => {
     formData.type = props.product.type || ''
     formData.productNo = props.product.productNo || ''
     formData.cnName = props.product.cnName || ''
-    formData.productSpec = props.product.productSpec || ''
+    formData.productImage = props.product.productImage || ''
     formData.price = props.product.price || ''
+    formData.background = props.product.background || ''
+    formData.categoryFlag = props.product.categoryFlag || ''
     
     // 根据类型判断是否需要 details 字段
     const findTypeInTree = (types, targetId) => {

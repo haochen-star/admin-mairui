@@ -176,38 +176,25 @@
         >
           <el-table-column type="index" label="序号" width="60" />
 
-          <!-- 需要 details 字段的类型列 -->
-          <template v-if="isResearchTestReagentType">
-            <el-table-column
-              prop="productNo"
-              label="产品货号"
-              min-width="150"
-            />
-            <el-table-column prop="cnName" label="产品名称" min-width="200" />
-            <el-table-column label="基因名称" min-width="150">
-              <template #default="{ row }">
-                {{ row.details?.geneName || '-' }}
-              </template>
-            </el-table-column>
-            <el-table-column label="推荐应用" min-width="150">
-              <template #default="{ row }">
-                {{ row.details?.recommendedApplication || '-' }}
-              </template>
-            </el-table-column>
-            <el-table-column label="反应种属" min-width="120">
-              <template #default="{ row }">
-                {{ row.details?.reactiveSpecies || '-' }}
-              </template>
-            </el-table-column>
-          </template>
-
-          <!-- 其他类型列 -->
-          <template v-else>
-            <el-table-column prop="productNo" label="货号" min-width="150" />
-            <el-table-column prop="cnName" label="产品名称" min-width="200" />
-            <el-table-column prop="productSpec" label="规格" min-width="120" />
-            <el-table-column prop="price" label="价格" min-width="100" />
-          </template>
+          <!-- 统一显示6个顶层字段 -->
+          <el-table-column prop="productNo" label="产品货号" min-width="150" />
+          <el-table-column prop="cnName" label="产品名称" min-width="200" />
+          <el-table-column
+            prop="productImage"
+            label="产品图片"
+            min-width="150"
+          />
+          <el-table-column prop="price" label="价格" min-width="100" />
+          <el-table-column prop="background" label="背景介绍" min-width="200">
+            <template #default="{ row }">
+              <div class="background-text">{{ row.background || '-' }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="categoryFlag"
+            label="产品类别标志"
+            min-width="120"
+          />
 
           <el-table-column label="状态" width="120">
             <template #default="{ row }">
@@ -346,10 +333,12 @@ const previewTableData = computed(() => {
   const errorsToShow = previewData.value.errors.slice(0, previewLimit)
   errorsToShow.forEach((error) => {
     const errorProduct = {
-      productNo: error.data['货号'] || error.data['产品货号'] || '',
-      cnName: error.data['中文名称'] || error.data['产品名称'] || '',
-      productSpec: error.data['规格'] || '',
+      productNo: error.data['产品货号'] || '',
+      cnName: error.data['产品名称'] || '',
+      productImage: error.data['产品图片'] || '',
       price: error.data['价格'] || '',
+      background: error.data['背景介绍'] || '',
+      categoryFlag: error.data['产品类别标志'] || '',
       details: error.data,
       _hasError: true,
       _rowNum: error.row,
@@ -719,5 +708,16 @@ pre {
 
 :deep(.error-row:hover) {
   background-color: #fde2e2;
+}
+
+.background-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.5;
 }
 </style>

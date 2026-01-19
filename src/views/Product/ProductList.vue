@@ -85,15 +85,16 @@
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="productNo" label="货号" width="150" />
+        <el-table-column prop="productNo" label="产品货号" width="150" />
         <el-table-column prop="cnName" label="产品名称" min-width="200" />
-        <el-table-column prop="productSpec" label="产品规格" min-width="200" />
-        <el-table-column prop="price" label="价格" width="120" />
-        <el-table-column prop="type" label="产品类型" width="150">
+        <el-table-column prop="productImage" label="产品图片" min-width="150" />
+        <el-table-column prop="price" label="价格" width="150" />
+        <el-table-column prop="background" label="背景介绍" min-width="200">
           <template #default="{ row }">
-            {{ getTypeLabel(row.type) }}
+            <div class="background-text">{{ row.background || '-' }}</div>
           </template>
         </el-table-column>
+        <el-table-column prop="categoryFlag" label="产品类别标志" width="120" />
         <el-table-column prop="createdAt" label="创建时间" width="180">
           <template #default="{ row }">
             {{ formatDate(row.createdAt) }}
@@ -411,8 +412,10 @@ const handleFormSubmit = async (formData) => {
       type: formData.type,
       productNo: formData.productNo,
       cnName: formData.cnName,
-      productSpec: formData.productSpec,
-      price: formData.price
+      productImage: formData.productImage || '',
+      price: formData.price || '',
+      background: formData.background || '',
+      categoryFlag: formData.categoryFlag || ''
     }
 
     // 查找类型信息，判断是否需要 details
@@ -484,5 +487,16 @@ onMounted(async () => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.background-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.5;
 }
 </style>

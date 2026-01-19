@@ -24,17 +24,17 @@ function parseSimpleProductData(rows) {
     const rowNum = index + 2 // Excel 行号（从2开始，因为第1行是表头）
     const errorsForRow = []
 
-    // 获取字段值
-    const productNo = row['货号'] || row['产品货号'] || ''
-    const cnName = row['中文名称'] || row['产品名称'] || ''
-    const productSpec = row['规格'] || ''
-    // 处理价格字段，支持多种可能的列名
-    const price =
-      row['价格'] || row['单价'] || row['Price'] || row['price'] || ''
+    // 获取字段值（只支持精确列名）
+    const productNo = row['产品货号'] || ''
+    const cnName = row['产品名称'] || ''
+    const productImage = row['产品图片'] || ''
+    const price = row['价格'] || ''
+    const background = row['背景介绍'] || ''
+    const categoryFlag = row['产品类别标志'] || ''
 
     // 验证必填字段
     if (!productNo || productNo.toString().trim() === '') {
-      errorsForRow.push('货号不能为空')
+      errorsForRow.push('产品货号不能为空')
     }
 
     if (errorsForRow.length > 0) {
@@ -47,8 +47,10 @@ function parseSimpleProductData(rows) {
       products.push({
         productNo: productNo.toString().trim(),
         cnName: cnName.toString().trim(),
-        productSpec: productSpec.toString().trim(),
-        price: price.toString().trim()
+        productImage: productImage.toString().trim(),
+        price: price.toString().trim(),
+        background: background.toString().trim(),
+        categoryFlag: categoryFlag.toString().trim()
       })
     }
   })
@@ -77,46 +79,48 @@ function parseResearchTestReagentData(rows) {
       errorsForRow.push('产品货号不能为空')
     }
 
-    // 构建 details 对象
+    // 构建顶层字段
+    const cnName = (row['产品名称'] || '').toString().trim()
+    const productImage = (row['产品图片'] || '').toString().trim()
+    const price = (row['价格'] || '').toString().trim()
+    const background = (row['背景介绍'] || '').toString().trim()
+    const categoryFlag = (row['产品类别标志'] || '').toString().trim()
+
+    // 构建 details 对象（33个字段，排除顶层6个字段）
     const details = {
-      productName: (row['产品名称'] || '').toString().trim(),
-      category: (row['二级分类'] || '').toString().trim(),
-      categoryPath: (row['分类路径'] || '').toString().trim(),
+      alias: (row['别名'] || '').toString().trim(),
       geneName: (row['基因名称'] || '').toString().trim(),
       proteinName: (row['蛋白名称'] || '').toString().trim(),
-      recommendedApplication: (row['推荐应用'] || '').toString().trim(),
+      application: (row['应用'] || '').toString().trim(),
       reactiveSpecies: (row['反应种属'] || '').toString().trim(),
-      concentration: (row['浓度'] || '').toString().trim(),
       storageBuffer: (row['存储缓冲液'] || '').toString().trim(),
       humanGeneId: row['Human Gene ID'] ? Number(row['Human Gene ID']) : null,
       humanGeneLink: (row['Human Gene Link'] || '').toString().trim(),
-      humanSwissprotNo: (row['Human Swissprot No.'] || '').toString().trim(),
+      humanSwissprotNo: (row['Human Swissprot No'] || '').toString().trim(),
       humanSwissprotLink: (row['Human Swissprot Link'] || '').toString().trim(),
       mouseGeneId: row['Mouse Gene ID'] ? Number(row['Mouse Gene ID']) : null,
       mouseGeneLink: (row['Mouse Gene Link'] || '').toString().trim(),
-      mouseSwissprotNo: (row['Mouse Swissprot No.'] || '').toString().trim(),
+      mouseSwissprotNo: (row['Mouse Swissprot No'] || '').toString().trim(),
       mouseSwissprotLink: (row['Mouse Swissprot Link'] || '').toString().trim(),
       ratGeneId: row['Rat Gene ID'] ? Number(row['Rat Gene ID']) : null,
       ratGeneLink: (row['Rat Gene Link'] || '').toString().trim(),
-      ratSwissprotNo: (row['Rat Swissprot No.'] || '').toString().trim(),
+      ratSwissprotNo: (row['Rat Swissprot No'] || '').toString().trim(),
       ratSwissprotLink: (row['Rat Swissprot Link'] || '').toString().trim(),
-      immunogen: (row['免疫原'] || '').toString().trim(),
-      specificity: (row['特异性'] || '').toString().trim(),
-      dilution: (row['稀释度'] || '').toString().trim(),
+      reference: (row['参考文献'] || '').toString().trim(),
       referenceMolecularWeight: (row['参考分子量'] || '').toString().trim(),
+      predictedMolecularWeight: (row['预测分子量'] || '').toString().trim(),
       storageCondition: (row['运输及保存条件'] || '').toString().trim(),
       host: (row['宿主'] || '').toString().trim(),
+      isotype: (row['同种型'] || '').toString().trim(),
       cellLocalization: (row['细胞定位'] || '').toString().trim(),
+      signalingPathway: (row['信号通路'] || '').toString().trim(),
       function: (row['功能'] || '').toString().trim(),
-      stockStatus: (row['期货'] || '').toString().trim(),
+      stockStatus: (row['货期'] || '').toString().trim(),
       purification: (row['纯化'] || '').toString().trim(),
-      tags: (row['标记'] || '').toString().trim(),
-      img: (row['多图'] || row['img'] || row['图片地址'] || '')
-        .toString()
-        .trim(),
-      imgDesc: (row['多图描述'] || '').toString().trim(),
-      background: (row['背景介绍'] || '').toString().trim(),
-      tissueExpression: (row['组织表达'] || '').toString().trim()
+      clonality: (row['克隆性'] || '').toString().trim(),
+      manual: (row['说明书'] || '').toString().trim(),
+      img: (row['多图'] || '').toString().trim(),
+      imgDesc: (row['多图描述'] || '').toString().trim()
     }
 
     if (errorsForRow.length > 0) {
@@ -126,15 +130,13 @@ function parseResearchTestReagentData(rows) {
         data: row
       })
     } else {
-      const productName = details.productName || ''
-      // 处理价格字段，支持多种可能的列名（重组兔单克隆抗体的价格格式：50UL|1300,100UL|2300）
-      const price =
-        row['价格'] || row['单价'] || row['Price'] || row['price'] || ''
-
       products.push({
         productNo: productNo.toString().trim(),
-        cnName: productName,
-        price: price.toString().trim(),
+        cnName: cnName,
+        productImage: productImage,
+        price: price,
+        background: background,
+        categoryFlag: categoryFlag,
         details: details
       })
     }

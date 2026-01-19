@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx'
  */
 function collectLeafTypes(types) {
   const result = []
-  
+
   for (const type of types) {
     // 如果有子类，跳过父类，只收集子类
     if (type.children && type.children.length > 0) {
@@ -18,7 +18,7 @@ function collectLeafTypes(types) {
       result.push(type)
     }
   }
-  
+
   return result
 }
 
@@ -34,28 +34,34 @@ function identifyProductTypeByFileName(fileName, productTypes = []) {
   }
 
   const lowerFileName = fileName.toLowerCase()
-  
+
   // 收集所有叶子节点和子分类
   const leafTypes = collectLeafTypes(productTypes)
-  
+
   // 按标签长度降序排序，优先匹配更具体的分类名称
   leafTypes.sort((a, b) => b.label.length - a.label.length)
-  
+
   // 遍历所有叶子节点和子分类，检查文件名是否包含分类名称
   for (const type of leafTypes) {
     const lowerLabel = type.label.toLowerCase()
-    
+
     // 如果文件名包含分类名称，返回该分类的 ID
     if (lowerFileName.includes(lowerLabel)) {
       return type.id
     }
   }
-  
+
   return null
 }
 
 self.onmessage = function (e) {
-  const { fileData, productTypeId, fileName, productTypes = [], chunkSize = 1000 } = e.data
+  const {
+    fileData,
+    productTypeId,
+    fileName,
+    productTypes = [],
+    chunkSize = 1000
+  } = e.data
 
   try {
     // 解析 Excel
@@ -119,7 +125,12 @@ self.onmessage = function (e) {
 
     for (let i = 0; i < jsonData.length; i += chunkSize) {
       const chunk = jsonData.slice(i, i + chunkSize)
-      const chunkResult = processChunk(chunk, identifiedTypeId, productType?.hasDetails || false, i + 2)
+      const chunkResult = processChunk(
+        chunk,
+        identifiedTypeId,
+        productType?.hasDetails || false,
+        i + 2
+      )
 
       products.push(...chunkResult.products)
       errors.push(...chunkResult.errors)
@@ -176,23 +187,26 @@ function processChunk(chunk, productTypeId, hasDetails, startRowNum) {
       if (errorsForRow.length > 0) {
         errors.push({ row: rowNum, errors: errorsForRow, data: row })
       } else {
+        // 构建顶层字段
+        const cnName = (row['产品名称'] || '').toString().trim()
+        const productImage = (row['产品图片'] || '').toString().trim()
+        const price = (row['价格'] || '').toString().trim()
+        const background = (row['背景介绍'] || '').toString().trim()
+        const categoryFlag = (row['产品类别标志'] || '').toString().trim()
+
+        // 构建 details 对象（33个字段，排除顶层6个字段）
         const details = {
-          productName: (row['产品名称'] || '').toString().trim(),
-          category: (row['二级分类'] || '').toString().trim(),
-          categoryPath: (row['分类路径'] || '').toString().trim(),
+          alias: (row['别名'] || '').toString().trim(),
           geneName: (row['基因名称'] || '').toString().trim(),
           proteinName: (row['蛋白名称'] || '').toString().trim(),
-          recommendedApplication: (row['推荐应用'] || '').toString().trim(),
+          application: (row['应用'] || '').toString().trim(),
           reactiveSpecies: (row['反应种属'] || '').toString().trim(),
-          concentration: (row['浓度'] || '').toString().trim(),
           storageBuffer: (row['存储缓冲液'] || '').toString().trim(),
           humanGeneId: row['Human Gene ID']
             ? Number(row['Human Gene ID'])
             : null,
           humanGeneLink: (row['Human Gene Link'] || '').toString().trim(),
-          humanSwissprotNo: (row['Human Swissprot No.'] || '')
-            .toString()
-            .trim(),
+          humanSwissprotNo: (row['Human Swissprot No'] || '').toString().trim(),
           humanSwissprotLink: (row['Human Swissprot Link'] || '')
             .toString()
             .trim(),
@@ -200,64 +214,65 @@ function processChunk(chunk, productTypeId, hasDetails, startRowNum) {
             ? Number(row['Mouse Gene ID'])
             : null,
           mouseGeneLink: (row['Mouse Gene Link'] || '').toString().trim(),
-          mouseSwissprotNo: (row['Mouse Swissprot No.'] || '')
-            .toString()
-            .trim(),
+          mouseSwissprotNo: (row['Mouse Swissprot No'] || '').toString().trim(),
           mouseSwissprotLink: (row['Mouse Swissprot Link'] || '')
             .toString()
             .trim(),
           ratGeneId: row['Rat Gene ID'] ? Number(row['Rat Gene ID']) : null,
           ratGeneLink: (row['Rat Gene Link'] || '').toString().trim(),
-          ratSwissprotNo: (row['Rat Swissprot No.'] || '').toString().trim(),
+          ratSwissprotNo: (row['Rat Swissprot No'] || '').toString().trim(),
           ratSwissprotLink: (row['Rat Swissprot Link'] || '').toString().trim(),
-          immunogen: (row['免疫原'] || '').toString().trim(),
-          specificity: (row['特异性'] || '').toString().trim(),
-          dilution: (row['稀释度'] || '').toString().trim(),
+          reference: (row['参考文献'] || '').toString().trim(),
           referenceMolecularWeight: (row['参考分子量'] || '').toString().trim(),
+          predictedMolecularWeight: (row['预测分子量'] || '').toString().trim(),
           storageCondition: (row['运输及保存条件'] || '').toString().trim(),
           host: (row['宿主'] || '').toString().trim(),
+          isotype: (row['同种型'] || '').toString().trim(),
           cellLocalization: (row['细胞定位'] || '').toString().trim(),
+          signalingPathway: (row['信号通路'] || '').toString().trim(),
           function: (row['功能'] || '').toString().trim(),
-          stockStatus: (row['期货'] || '').toString().trim(),
+          stockStatus: (row['货期'] || '').toString().trim(),
           purification: (row['纯化'] || '').toString().trim(),
-          tags: (row['标记'] || '').toString().trim(),
-          img: (row['多图'] || row['img'] || row['图片地址'] || '')
-            .toString()
-            .trim(),
-          imgDesc: (row['多图描述'] || '').toString().trim(),
-          background: (row['背景介绍'] || '').toString().trim(),
-          tissueExpression: (row['组织表达'] || '').toString().trim()
+          clonality: (row['克隆性'] || '').toString().trim(),
+          manual: (row['说明书'] || '').toString().trim(),
+          img: (row['多图'] || '').toString().trim(),
+          imgDesc: (row['多图描述'] || '').toString().trim()
         }
-
-        // 处理价格字段，支持多种可能的列名（重组兔单克隆抗体的价格格式：50UL|1300,100UL|2300）
-        const price =
-          row['价格'] || row['单价'] || row['Price'] || row['price'] || ''
 
         products.push({
           productNo: productNo.toString().trim(),
-          cnName: details.productName,
-          price: price.toString().trim(),
+          cnName: cnName,
+          productImage: productImage,
+          price: price,
+          background: background,
+          categoryFlag: categoryFlag,
           type: productTypeId,
           details
         })
       }
     } else {
-      const productNo = row['货号'] || row['产品货号'] || ''
+      // 简单类型：只支持精确列名
+      const productNo = row['产品货号'] || ''
       if (!productNo || productNo.toString().trim() === '') {
-        errorsForRow.push('货号不能为空')
+        errorsForRow.push('产品货号不能为空')
       }
 
       if (errorsForRow.length > 0) {
         errors.push({ row: rowNum, errors: errorsForRow, data: row })
       } else {
-        // 处理价格字段，支持多种可能的列名
-        const price =
-          row['价格'] || row['单价'] || row['Price'] || row['price'] || ''
+        const cnName = (row['产品名称'] || '').toString().trim()
+        const productImage = (row['产品图片'] || '').toString().trim()
+        const price = (row['价格'] || '').toString().trim()
+        const background = (row['背景介绍'] || '').toString().trim()
+        const categoryFlag = (row['产品类别标志'] || '').toString().trim()
+
         products.push({
           productNo: productNo.toString().trim(),
-          cnName: (row['中文名称'] || row['产品名称'] || '').toString().trim(),
-          productSpec: (row['规格'] || '').toString().trim(),
-          price: price.toString().trim(),
+          cnName: cnName,
+          productImage: productImage,
+          price: price,
+          background: background,
+          categoryFlag: categoryFlag,
           type: productTypeId
         })
       }
