@@ -317,7 +317,7 @@ onMounted(() => {
 
 <style scoped>
 .product-type-list {
-  padding: 20px;
+  width: 100%;
 }
 
 .card-header {
