@@ -441,6 +441,31 @@
             placeholder="产品简介、储存与运输、注意事项等请在此统一编辑（支持标题、列表、外链图片等）"
           />
         </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="多图">
+              <el-input
+                v-model="formData.details.img"
+                type="textarea"
+                :rows="2"
+                placeholder="请输入多图（支持多图，用逗号分隔）"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="多图描述">
+              <el-input
+                v-model="formData.details.imgDesc"
+                type="textarea"
+                :rows="2"
+                placeholder="请输入多图描述"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </template>
     </el-form>
 
@@ -528,14 +553,18 @@ const initDetails = () => ({
 // 初始化自定义详情
 const initTsaDetails = () => ({
   manualPdfUrl: '',
-  customContentHtml: ''
+  customContentHtml: '',
+  img: '',
+  imgDesc: ''
 })
 
 const pickTsaDetailsForSubmit = (d) => ({
   manualPdfUrl:
     d && typeof d.manualPdfUrl === 'string' ? d.manualPdfUrl.trim() : '',
   customContentHtml:
-    d && typeof d.customContentHtml === 'string' ? d.customContentHtml : ''
+    d && typeof d.customContentHtml === 'string' ? d.customContentHtml : '',
+  img: d && typeof d.img === 'string' ? d.img.trim() : '',
+  imgDesc: d && typeof d.imgDesc === 'string' ? d.imgDesc : ''
 })
 
 const formData = reactive({
