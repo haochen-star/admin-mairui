@@ -40,6 +40,14 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="详情类型" width="110">
+          <template #default="{ row }">
+            <template v-if="row.hasDetails">
+              {{ row.detailType === 1 ? '自定义' : '抗体' }}
+            </template>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">
@@ -89,6 +97,16 @@
           <span style="margin-left: 10px; color: #909399; font-size: 12px">
             开启后，该类型的产品将支持详细信息字段（如基因名称、推荐应用等）
           </span>
+        </el-form-item>
+        <el-form-item
+          v-if="formData.hasDetails"
+          label="详情类型"
+          prop="detailType"
+        >
+          <el-radio-group v-model="formData.detailType">
+            <el-radio :label="0">抗体</el-radio>
+            <el-radio :label="1">自定义</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
 
@@ -153,8 +171,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useProductTypeStore } from '@/stores/productType'
 
@@ -183,7 +201,8 @@ const rootTypes = computed(() => {
 const formData = reactive({
   label: '',
   parentId: null,
-  hasDetails: false
+  hasDetails: false,
+  detailType: 0
 })
 
 // 验证规则
@@ -192,6 +211,15 @@ const formRules = {
 }
 
 const isEdit = computed(() => !!currentType.value)
+
+watch(
+  () => formData.hasDetails,
+  (on) => {
+    if (!on) {
+      formData.detailType = 0
+    }
+  }
+)
 
 // 加载数据
 const loadData = async () => {
@@ -211,6 +239,7 @@ const handleAdd = () => {
   formData.label = ''
   formData.parentId = null
   formData.hasDetails = false
+  formData.detailType = 0
   formVisible.value = true
 }
 
@@ -220,6 +249,8 @@ const handleEdit = (type) => {
   formData.label = type.label
   formData.parentId = type.parentId || null
   formData.hasDetails = type.hasDetails || false
+  formData.detailType =
+    type.hasDetails && type.detailType === 1 ? 1 : 0
   formVisible.value = true
 }
 
@@ -283,6 +314,9 @@ const handleSubmit = async () => {
         label: formData.label.trim(),
         parentId: formData.parentId || null,
         hasDetails: formData.hasDetails
+      }
+      if (formData.hasDetails) {
+        data.detailType = formData.detailType
       }
 
       if (isEdit.value) {

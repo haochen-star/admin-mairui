@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     :title="isEdit ? '编辑产品' : '新增产品'"
-    :width="isResearchTestReagent ? '1200px' : '600px'"
+    :width="isWideProductDialog ? '1200px' : '600px'"
     @close="handleClose"
   >
     <el-form
@@ -17,6 +17,7 @@
           v-model="formData.type"
           placeholder="请选择产品类型"
           style="width: 100%"
+          @change="onProductTypeChange"
         >
           <template v-for="type in productTypes" :key="type.id">
             <!-- 所有类型都使用分组显示 -->
@@ -42,7 +43,10 @@
         </el-select>
       </el-form-item>
       <el-form-item label="货号" prop="productNo">
-        <el-input v-model="formData.productNo" placeholder="请输入货号" />
+        <el-input
+          v-model="formData.productNo"
+          placeholder="请输入货号；多规格可为 num1/num2/num3"
+        />
       </el-form-item>
       <el-form-item label="产品名称" prop="cnName">
         <el-input v-model="formData.cnName" placeholder="请输入产品名称" />
@@ -71,8 +75,8 @@
         />
       </el-form-item>
 
-      <!-- 科研监测试剂详细信息 -->
-      <template v-if="isResearchTestReagent">
+      <!-- 抗体复杂品详细信息 -->
+      <template v-if="isAntibodyDetailForm">
         <el-divider content-position="left">详细信息</el-divider>
 
         <el-row :gutter="20">
@@ -421,6 +425,23 @@
           </el-col>
         </el-row>
       </template>
+
+      <template v-else-if="isTsaDetailForm">
+        <el-divider content-position="left">详细信息（自定义）</el-divider>
+        <el-form-item label="说明书">
+          <el-input
+            v-model="formData.details.manualPdfUrl"
+            placeholder="请输入说明书 PDF 的网络地址，如 https://example.com/static/upload/xxx.pdf"
+            clearable
+          />
+        </el-form-item>
+        <el-form-item label="自定义内容">
+          <PrecautionsWangEditor
+            v-model="formData.details.customContentHtml"
+            placeholder="产品简介、储存与运输、注意事项等请在此统一编辑（支持标题、列表、外链图片等）"
+          />
+        </el-form-item>
+      </template>
     </el-form>
 
     <template #footer>
@@ -437,6 +458,7 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import PrecautionsWangEditor from '@/components/editor/PrecautionsWangEditor.vue'
 
 const props = defineProps({
   modelValue: {
@@ -503,6 +525,19 @@ const initDetails = () => ({
   imgDesc: ''
 })
 
+// 初始化自定义详情
+const initTsaDetails = () => ({
+  manualPdfUrl: '',
+  customContentHtml: ''
+})
+
+const pickTsaDetailsForSubmit = (d) => ({
+  manualPdfUrl:
+    d && typeof d.manualPdfUrl === 'string' ? d.manualPdfUrl.trim() : '',
+  customContentHtml:
+    d && typeof d.customContentHtml === 'string' ? d.customContentHtml : ''
+})
+
 const formData = reactive({
   type: '',
   productNo: '',
@@ -526,33 +561,36 @@ const findTypeInTree = (types, targetId) => {
   return null
 }
 
-// 根据类型 ID 判断是否需要 details 字段
-const isResearchTestReagent = computed(() => {
-  if (!formData.type) return false
-
-  const type = findTypeInTree(props.productTypes, formData.type)
-  return type ? type.hasDetails : false
+const selectedTypeMeta = computed(() => {
+  if (!formData.type) return null
+  return findTypeInTree(props.productTypes, formData.type)
 })
 
-// 监听类型变化，确保复杂产品的 details 被正确初始化
-watch(
-  () => formData.type,
-  (newType, oldType) => {
-    if (newType) {
-      const type = findTypeInTree(props.productTypes, newType)
-      // 如果切换到复杂类型，确保 details 被初始化
-      if (type && type.hasDetails) {
-        // 如果是从简单类型切换到复杂类型，或者 details 未正确初始化，则重新初始化
-        if (
-          !oldType ||
-          !formData.details ||
-          typeof formData.details !== 'object'
-        ) {
-          formData.details = initDetails()
-        }
-      }
-    }
+/** 按当前所选类型重置 details（用户切换下拉时清空为对应模版） */
+const onProductTypeChange = () => {
+  const t = selectedTypeMeta.value
+  if (t?.hasDetails && t.detailType === 1) {
+    formData.details = initTsaDetails()
+  } else {
+    formData.details = initDetails()
   }
+}
+
+/** 抗体复杂品：展示完整 details 表单 */
+const isAntibodyDetailForm = computed(() => {
+  const t = selectedTypeMeta.value
+  if (!t?.hasDetails) return false
+  return t.detailType !== 1
+})
+
+/** detailType=1：自定义详情表单 */
+const isTsaDetailForm = computed(() => {
+  const t = selectedTypeMeta.value
+  return !!t?.hasDetails && t.detailType === 1
+})
+
+const isWideProductDialog = computed(
+  () => isAntibodyDetailForm.value || isTsaDetailForm.value
 )
 
 // 产品名称现在只在顶层，不需要同步
@@ -585,7 +623,13 @@ const resetForm = () => {
   formData.price = ''
   formData.background = ''
   formData.categoryFlag = ''
-  formData.details = initDetails()
+
+  const tMeta = findTypeInTree(props.productTypes, formData.type)
+  if (tMeta?.hasDetails && tMeta.detailType === 1) {
+    formData.details = initTsaDetails()
+  } else {
+    formData.details = initDetails()
+  }
   formRef.value?.clearValidate()
 }
 
@@ -615,7 +659,24 @@ watch(
       }
       const productType = findTypeInTree(props.productTypes, newProduct.type)
 
-      if (productType && productType.hasDetails && newProduct.details) {
+      if (
+        productType &&
+        productType.hasDetails &&
+        productType.detailType === 1
+      ) {
+        formData.details = {
+          ...initTsaDetails(),
+          ...(newProduct.details &&
+          typeof newProduct.details === 'object'
+            ? newProduct.details
+            : {})
+        }
+      } else if (
+        productType &&
+        productType.hasDetails &&
+        productType.detailType !== 1 &&
+        newProduct.details
+      ) {
         formData.details = { ...initDetails(), ...newProduct.details }
       } else {
         formData.details = initDetails()
@@ -653,7 +714,24 @@ watch(visible, (val) => {
     }
     const productType = findTypeInTree(props.productTypes, props.product.type)
 
-    if (productType && productType.hasDetails && props.product.details) {
+    if (
+      productType &&
+      productType.hasDetails &&
+      productType.detailType === 1
+    ) {
+      formData.details = {
+        ...initTsaDetails(),
+        ...(props.product.details &&
+        typeof props.product.details === 'object'
+          ? props.product.details
+          : {})
+      }
+    } else if (
+      productType &&
+      productType.hasDetails &&
+      productType.detailType !== 1 &&
+      props.product.details
+    ) {
       formData.details = { ...initDetails(), ...props.product.details }
     } else {
       formData.details = initDetails()
@@ -689,10 +767,15 @@ const handleSubmit = async () => {
         }
         const productType = findTypeInTree(props.productTypes, formData.type)
 
-        if (productType && productType.hasDetails) {
+        if (productType && productType.hasDetails && productType.detailType === 1) {
+          submitData.details = pickTsaDetailsForSubmit(formData.details)
+        } else if (
+          productType &&
+          productType.hasDetails &&
+          productType.detailType !== 1
+        ) {
           submitData.details = { ...formData.details }
         } else {
-          // 不需要 details 的类型，不提交 details
           delete submitData.details
         }
 

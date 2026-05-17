@@ -27,6 +27,7 @@ export const getProductTypeById = (id) => {
  * @param {string} data.label - 类型标签（必填）
  * @param {number} data.parentId - 父类型 ID（可选）
  * @param {boolean} data.hasDetails - 是否需要 details 字段（可选）
+ * @param {0|1} [data.detailType] - 仅当 hasDetails 为 true 时有效：0=抗体，1=自定义；不传则后端默认为 0
  */
 export const createProductType = (data) => {
   return request({
@@ -43,6 +44,7 @@ export const createProductType = (data) => {
  * @param {string} data.label - 类型标签（可选）
  * @param {number} data.parentId - 父类型 ID（可选，设置为 null 可将子分类提升为一级分类）
  * @param {boolean} data.hasDetails - 是否需要 details 字段（可选）
+ * @param {0|1} [data.detailType] - 仅当 hasDetails 为 true 时有效：0=抗体，1=自定义
  */
 export const updateProductType = (id, data) => {
   return request({
